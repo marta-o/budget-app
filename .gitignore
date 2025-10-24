@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+env_budget/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Systemowe
+.DS_Store
+Thumbs.db
