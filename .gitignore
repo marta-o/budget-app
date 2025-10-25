@@ -1,16 +1,39 @@
 # Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.db
+/backend/env_budget/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
 env_budget/
 
-# Node
-node_modules/
-dist/
-build/
+# dotenv
+.env
+.env.local
+.env.*.local
 
-# Systemowe
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node / frontend
+/frontend/node_modules/
+/frontend/dist/
+frontend/build/
+
+# Editor / OS
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
+
+# Test / coverage / logs
+.coverage
+htmlcov/
+pytest_cache/
+*.log
+
+# Build artifacts
+/dist
+/build
+/.parcel-cache
