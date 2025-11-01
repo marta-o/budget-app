@@ -1,38 +1,66 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL =  "http://127.0.0.1:8000";
 
 export async function login(username: string, password: string) {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }), // dopasuj do backendu: username lub email
+    body: JSON.stringify({ username, password }),
   });
+  if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+  return res.json();
+}
 
-  const payload = await res.json().catch(() => ({}));
+async function handleRes(res: Response) {
   if (!res.ok) {
-    // backend zwykle zwraca { detail: "..." } lub inny komunikat
-    const msg = payload?.detail || payload?.message || "Błąd logowania";
-    throw new Error(msg);
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || body.message || res.statusText);
   }
-  return payload; // oczekujemy { access_token: "..." }
+  return res.json().catch(() => ({}));
+}
+
+export async function getProfile(token: string) {
+  const res = await fetch(`${API_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
 }
 
 export async function getTransactions(token: string) {
   const res = await fetch(`${API_URL}/transactions`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) return [];
-  return res.json();
+  return handleRes(res);
 }
 
-export async function addTransaction(token: string, title: string, amount: number) {
-  const res = await fetch(`${API_URL}/transactions`, {
+export async function addTransaction(token: string, tx: { title: string; amount: number; category_id?: number; type?: string; date?: string }) {
+  const res = await fetch(`${API_URL}/transactions/`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json", 
-      Authorization: `Bearer ${token}` 
-    },
-    body: JSON.stringify({ title, amount }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(tx),
   });
-  return res.json();
+  return handleRes(res);
 }
 
+export async function updateTransaction(token: string, id: string | number, tx: Partial<{ title: string; amount: number; category_id?: number; type?: string; date?: string }>) {
+  const res = await fetch(`${API_URL}/transactions/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(tx),
+  });
+  return handleRes(res);
+}
+
+export async function deleteTransaction(token: string, id: string | number) {
+  const res = await fetch(`${API_URL}/transactions/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
+
+export async function getCategories(token: string) {
+  const res = await fetch(`${API_URL}/categories`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}

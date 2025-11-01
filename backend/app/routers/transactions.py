@@ -9,39 +9,13 @@ transactions.py router
   - POST /transactions -> create a transaction for current user
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status, Path
 from sqlalchemy.orm import Session
-from jose import jwt, JWTError
-from typing import Optional
 from .. import crud, schemas, models
 from ..database import get_db
-from ..config import settings
-
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = settings.ALGORITHM
+from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
-
-def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)) -> models.User:
-    if not authorization:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Authorization header")
-    token = authorization.replace("Bearer ", "")
-    # if you return dummy token during dev, handle it here (e.g. token == "dummy-token")
-    if token == "dummy-token":
-        # for dummy: assume username passed in a custom header or use a default test user
-        user = crud.get_user_by_username(db, "anowak")
-        if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Dummy user not found")
-        return user
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    user = crud.get_user_by_username(db, username)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    return user
 
 @router.get("/")
 def list_transactions(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -60,3 +34,17 @@ def add_transaction(transaction: schemas.TransactionCreate, user: models.User = 
     - Uses CRUD layer to persist the record and returns created object.
     """
     return crud.create_transaction(db, transaction, user.person_id)
+
+@router.put("/{tx_id}", response_model=schemas.TransactionOut)
+def update_transaction(tx_id: int = Path(..., gt=0), transaction: schemas.TransactionCreate = None, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    updated = crud.update_transaction(db, tx_id, transaction, user.person_id)
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+    return updated
+
+@router.delete("/{tx_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_transaction(tx_id: int = Path(..., gt=0), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ok = crud.delete_transaction(db, tx_id, user.person_id)
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+    return

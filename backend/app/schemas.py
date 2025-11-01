@@ -8,6 +8,7 @@ schemas.py
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+from typing import Literal
 
 class UserCreate(BaseModel):
     """
@@ -16,6 +17,12 @@ class UserCreate(BaseModel):
     """
     username: str
     password: str
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    class Config:
+        orm_mode = True
 
 class User(BaseModel):
     """
@@ -28,30 +35,27 @@ class User(BaseModel):
         orm_mode = True
 
 class TransactionBase(BaseModel):
-    """
-    Shared fields for creating / returning transactions.
-    """
-    title: str
+    title: Optional[str] = None
     amount: float
+    category_id: Optional[int] = None
+    date: Optional[datetime] = None
 
 class TransactionCreate(TransactionBase):
     """
-    Request body for creating a new transaction.
-    - date is set server-side if not provided.
+    Client uses 'income' | 'expense' values for type.
     """
-    date: Optional[datetime] = None
-    type: Optional[str] = "expense"
+    type: Literal["income", "expense"] = "expense"
 
-class Transaction(TransactionBase):
-    """
-    Response schema for transaction objects returned by the API.
-    """
+class TransactionOut(TransactionBase):
     id: int
     person_id: int
-    date: Optional[datetime]
-    type: str
-
+    type: Literal["income", "expense"]
     class Config:
         orm_mode = True
 
-
+class CategoryOut(BaseModel):
+    id: int
+    name: str
+    person_id: int
+    class Config:
+        orm_mode = True

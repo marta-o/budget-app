@@ -5,20 +5,23 @@ auth.py router
 - Returns a simple access_token (dummy-token) currently; replace with real JWT if needed.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt
 from datetime import datetime, timedelta
 from .. import schemas, crud, models
 from ..database import get_db
 from ..config import settings
-
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = settings.ALGORITHM
+from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register")
+def create_access_token(subject: str, expires_minutes: int | None = None):
+    expire = datetime.utcnow() + timedelta(minutes=(expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode = {"sub": subject, "exp": expire}
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+@router.post("/register", response_model=schemas.UserOut, status_code=201)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
@@ -26,10 +29,11 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     - Calls crud.create_user to persist user in DB.
     - Returns created user object (as-is).
     """
-    db_user = crud.get_user_by_username(db, user.username)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return crud.create_user(db, user)
+    existing = crud.get_user_by_username(db, user.username)
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
+    created = crud.create_user(db, user)
+    return created
 
 @router.post("/login")
 def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -42,5 +46,10 @@ def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
     db_user = crud.get_user_by_username(db, user.username)
     if not db_user or not crud.verify_password(user.password, db_user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"access_token": "dummy-token"}
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    token = create_access_token(db_user.username)
+    return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/me", response_model=schemas.UserOut)
+def me(user: models.User = Depends(get_current_user)):
+    return user
