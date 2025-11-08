@@ -6,7 +6,7 @@ models.py
   column for logins, keep Column("password", ...) here).
 """
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -31,7 +31,6 @@ class Person(Base):
 
     user = relationship("User", back_populates="person", uselist=False)
     transactions = relationship("Transaction", back_populates="person")
-    categories = relationship("Category", back_populates="person")
 
 class User(Base):
     """
@@ -67,9 +66,8 @@ class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True)
-    person_id = Column(Integer, ForeignKey("people.id"))
+    type = Column(String, default="expense")
 
-    person = relationship("Person", back_populates="categories")
     transactions = relationship("Transaction", back_populates="category")
 
 class Transaction(Base):
@@ -94,7 +92,7 @@ class Transaction(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     title = Column(String)
     amount = Column(Float)
-    date = Column(DateTime)
+    date = Column(Date)
     type = Column(String, default="expense")
 
     person = relationship("Person", back_populates="transactions")

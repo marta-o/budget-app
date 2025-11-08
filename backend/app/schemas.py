@@ -6,7 +6,7 @@ schemas.py
 """
 
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import date
 from typing import Optional
 from typing import Literal
 
@@ -38,7 +38,7 @@ class TransactionBase(BaseModel):
     title: Optional[str] = None
     amount: float
     category_id: Optional[int] = None
-    date: Optional[datetime] = None
+    date: date
 
 class TransactionCreate(TransactionBase):
     """
@@ -56,6 +56,6 @@ class TransactionOut(TransactionBase):
 class CategoryOut(BaseModel):
     id: int
     name: str
-    person_id: int
+    type: str
     class Config:
         orm_mode = True

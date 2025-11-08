@@ -58,9 +58,10 @@ export async function deleteTransaction(token: string, id: string | number) {
   return handleRes(res);
 }
 
-export async function getCategories(token: string) {
-  const res = await fetch(`${API_URL}/categories`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getCategories(token?: string, type?: string) {
+  const q = type ? `?type=${encodeURIComponent(type)}` : "";
+  const headers: any = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}/categories/${q}`, { headers });
   return handleRes(res);
 }

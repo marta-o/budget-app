@@ -24,7 +24,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -63,7 +62,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
     const tempId = `tmp-${Date.now()}`;
     const temp = { ...tx, id: tempId };
     setTransactions(prev => [temp, ...prev]);
-    setIsDialogOpen(false);
     try {
       const created = await addTransaction(token, tx as any);
       if (created && created.id) setTransactions(prev => prev.map(t => t.id === tempId ? created : t));
@@ -85,7 +83,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Na pewno usunąć?')) return;
     const backup = transactions;
     setTransactions(prev => prev.filter(t => t.id !== id));
     try {
@@ -151,7 +148,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 
         {error && <div className="text-red-600 mb-4">{error}</div>}
         {loading ? <div>Ładowanie...</div> : (
-          <TransactionList transactions={transactions} onDelete={handleDelete} onEdit={handleEdit} />
+          <TransactionList transactions={transactions} onDelete={handleDelete} onEdit={handleEdit} categories={categories} />
         )}
       </div>
     </div>

@@ -8,7 +8,8 @@ crud.py
 from sqlalchemy.orm import Session
 from . import models, schemas
 from passlib.context import CryptContext
-from datetime import datetime
+from datetime import date
+from typing import Optional
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -64,19 +65,23 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate, pers
     Create a new Transaction/Expense record associated with a person.
     - Automatically sets date to current UTC time and type to 'expense'.
     """
-    db_type = "wydatek" if transaction.type == "expense" else "przychód"
+    tx_date = transaction.date if getattr(transaction, "date", None) else date.today()
+    if isinstance(tx_date, str):
+        try:
+            tx_date = date.fromisoformat(tx_date)
+        except Exception:
+            tx_date = date.today()
     db_tx = models.Transaction(
-        title=getattr(transaction, "title", transaction.description if hasattr(transaction, "description") else None),
+        title=transaction.title,
         amount=transaction.amount,
         person_id=person_id,
-        date=transaction.date or datetime.utcnow(),
-        type=db_type,
-        category_id=getattr(transaction, "category_id", None)
+        date=tx_date,
+        type=transaction.type,
+        category_id=transaction.category_id
     )
     db.add(db_tx)
     db.commit()
     db.refresh(db_tx)
-    db_tx.type = "expense" if db_tx.type == "wydatek" else "income"
     return db_tx
 
 def get_transactions(db: Session, person_id: int):
@@ -84,13 +89,26 @@ def get_transactions(db: Session, person_id: int):
     Return all transaction rows for the given person_id.
     - Returns a list of models.Transaction objects.
     """
-    rows = db.query(models.Transaction).filter(models.Transaction.person_id == person_id).order_by(models.Transaction.date.desc()).all()
-    for r in rows:
-        if r.type == "wydatek":
-            r.type = "expense"
-        elif r.type == "przychód":
-            r.type = "income"
-    return rows
+    rows = (
+        db.query(models.Transaction, models.Category)
+        .outerjoin(models.Category, models.Transaction.category_id == models.Category.id)
+        .filter(models.Transaction.person_id == person_id)
+        .order_by(models.Transaction.date.desc())
+        .all()
+    )
+
+    out: List[Dict] = []
+    for tx, cat in rows:
+        out.append({
+            "id": tx.id,
+            "title": tx.title,
+            "amount": tx.amount,
+            "type": tx.type,
+            "category_id": tx.category_id,
+            "category": cat.name if cat is not None else None,
+            "date": tx.date.isoformat() if hasattr(tx.date, "isoformat") else str(tx.date),
+        })
+    return out
 
 def update_transaction(db: Session, tx_id: int, transaction: schemas.TransactionCreate, person_id: int):
     """
@@ -101,16 +119,25 @@ def update_transaction(db: Session, tx_id: int, transaction: schemas.Transaction
     db_tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id, models.Transaction.person_id == person_id).first()
     if not db_tx:
         return None
-    db_tx.title = getattr(transaction, "title", transaction.description if hasattr(transaction, "description") else db_tx.title)
-    db_tx.amount = transaction.amount
-    db_tx.category_id = getattr(transaction, "category_id", db_tx.category_id)
-    db_tx.date = transaction.date or db_tx.date
-    db_tx.type = "wydatek" if transaction.type == "expense" else "przychód"
+    if getattr(transaction, "title", None) is not None:
+        db_tx.title = transaction.title
+    if getattr(transaction, "amount", None) is not None:
+        db_tx.amount = transaction.amount
+    if getattr(transaction, "category_id", None) is not None:
+        db_tx.category_id = transaction.category_id
+    if getattr(transaction, "date", None):
+        tx_date = transaction.date
+        if isinstance(tx_date, str):
+            try:
+                tx_date = date.fromisoformat(tx_date)
+            except Exception:
+                tx_date = db_tx.date
+        db_tx.date = tx_date
+    if getattr(transaction, "type", None) is not None:
+        db_tx.type = transaction.type
     db.add(db_tx)
     db.commit()
     db.refresh(db_tx)
-    # map for response
-    db_tx.type = "expense" if db_tx.type == "wydatek" else "income"
     return db_tx
 
 def delete_transaction(db: Session, tx_id: int, person_id: int):
@@ -125,8 +152,13 @@ def delete_transaction(db: Session, tx_id: int, person_id: int):
     db.commit()
     return True
 
-def get_categories(db: Session, person_id: int):
+def get_categories(db: Session, type_filter: Optional[str] = None):
     """
-    Get all categories for a specific user.
+    Return all categories, optionally filtered by type.
+    - type_filter can be 'expense' or 'income' to filter categories.
+    - Returns a list of models.Category objects ordered by name.
     """
-    return db.query(models.Category).filter(models.Category.person_id == person_id).order_by(models.Category.name).all()
+    q = db.query(models.Category)
+    if type_filter:
+        q = q.filter(models.Category.type == type_filter)
+    return q.order_by(models.Category.name).all()

@@ -3,12 +3,10 @@ import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogClose,
 } from "./ui/dialog";
 import { Transaction, Category } from '../App';
@@ -26,6 +24,8 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
   const [categoryId, setCategoryId] = useState<number | ''>('');
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
+  const visibleCategories = categories.filter(c => c.type === type);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) {
@@ -33,15 +33,13 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
       return;
     }
     const payload: Omit<Transaction, 'id'> = {
-      title: title || (type === 'expense' ? 'Wydatek' : 'Przychód'),
+      title,
       amount: Number(amount),
       type,
       category_id: categoryId === '' ? null : Number(categoryId),
       category: categories.find(c => c.id === Number(categoryId))?.name ?? '',
       date,
-      // date: new Date().toISOString().split('T')[0],
     };
-
     onAdd(payload);
     setTitle(''); setAmount(''); setCategoryId(''); setType('expense');     
     setDate(new Date().toISOString().split("T")[0]);
@@ -82,12 +80,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
               value={String(categoryId)}
               onChange={e => setCategoryId(e.target.value === '' ? '' : Number(e.target.value))}
             >
-              <option value="">Brak kategorii</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              {visibleCategories.map(c => (<option key={c.id} value={c.id}>{c.name}</option>))}
             </select>
           </div>
 
@@ -107,7 +100,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
             <input
               className="w-full border border-gray-300 rounded px-3 py-2"
               type="number"
-              step="1"
+              step="0.1"
               placeholder="0.00"
               value={amount}
               onChange={e => setAmount(e.target.value)}

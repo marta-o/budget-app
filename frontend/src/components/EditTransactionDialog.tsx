@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Edit2 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogClose,
 } from "./ui/dialog";
-// import { Input } from './ui/input';
-// import { Label } from './ui/label';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-// import { Textarea } from './ui/textarea';
 import { Transaction, Category } from '../App';
 
 interface EditTransactionDialogProps {
@@ -25,77 +18,137 @@ interface EditTransactionDialogProps {
   categories?: Category[];
 }
 
-export function EditTransactionDialog({ open, onOpenChange, transaction, onUpdate, categories = [] }: EditTransactionDialogProps) {
-  const [isOpen, setIsOpen] = useState(open ?? false);
+export function EditTransactionDialog({ open = false, onOpenChange, transaction, onUpdate, categories = [] }: EditTransactionDialogProps) {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'income'|'expense'>('expense');
   const [categoryId, setCategoryId] = useState<number | ''>('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const visibleCategories = categories.filter(c => c.type === type);
 
   useEffect(() => {
-    if (typeof open !== 'undefined') setIsOpen(open);
-  }, [open]);
+    if (!transaction) {
+      setTitle(''); 
+      setAmount(''); 
+      setType('expense'); 
+      setCategoryId(''); 
+      setDate(new Date().toISOString().split('T')[0]);
+      return;
+    }
+    setTitle(transaction.title ?? '');
+    setAmount(String(transaction.amount ?? ''));
+    setType(transaction.type ?? 'expense');
+    setDate(transaction.date ?? new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    if (transaction) {
-      setTitle(transaction.title ?? '');
-      setAmount(String(transaction.amount ?? ''));
-      setType(transaction.type ?? 'expense');
-      setCategoryId(transaction.category_id ?? '');
-      setIsOpen(true);
+    const txCatId = transaction.category_id;
+    if (txCatId != null) {
+      const cat = categories.find(c => c.id === txCatId);
+      if (cat && cat.type === (transaction.type ?? 'expense')) {
+        setCategoryId(txCatId);
+      } else {
+        setCategoryId('');
+      }
     } else {
-      setTitle('');
-      setAmount('');
-      setType('expense');
       setCategoryId('');
     }
-  }, [transaction]);
+  }, [transaction, categories]);
+
+  useEffect(() => {
+    if (categoryId !== '' && !visibleCategories.some(c => c.id === categoryId)) {
+      setCategoryId('');
+    }
+  }, [type, categories, categoryId, visibleCategories]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!transaction) return;
-    onUpdate(transaction.id, {
+    const payload: Omit<Transaction, 'id'> = {
       title,
       amount: Number(amount),
       type,
       category_id: categoryId === '' ? null : Number(categoryId),
       category: categories.find(c => c.id === Number(categoryId))?.name ?? '',
-      date: transaction.date ?? new Date().toISOString().split('T')[0],
-    });
-    setIsOpen(false);
+      date,
+    };
+    onUpdate(transaction.id, payload);
     onOpenChange?.(false);
   };
 
-  if (!transaction) {
-    return null;
-  }
+  if (!transaction) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(v) => { setIsOpen(v); onOpenChange?.(v); }}>
-      <DialogTrigger asChild>
-        <Button variant="ghost"><Edit2 className="w-4 h-4 mr-2" />Edytuj</Button>
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogTitle>Edytuj transakcję</DialogTitle>
-        <DialogDescription>Zmodyfikuj dane transakcji i zapisz zmiany.</DialogDescription>
+    <Dialog open={open} onOpenChange={(v) => onOpenChange?.(v)}>
+      <DialogContent className="max-w-md bg-white text-gray-900">
+        <DialogHeader>
+          <DialogTitle>Edytuj transakcję</DialogTitle>
+          <DialogDescription>Zmodyfikuj dane i zapisz zmiany.</DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={submit} className="space-y-3 mt-2">
-          <input className="w-full border px-2 py-1" placeholder="Tytuł" value={title} onChange={e => setTitle(e.target.value)} required />
-          <input className="w-full border px-2 py-1" placeholder="Kwota" type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required />
-          <select className="w-full border px-2 py-1" value={String(categoryId)} onChange={e => setCategoryId(e.target.value === '' ? '' : Number(e.target.value))}>
-            <option value="">Brak kategorii</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <div className="flex gap-2 items-center">
-            <select value={type} onChange={e => setType(e.target.value as any)} className="border px-2 py-1">
+          <div>
+            <label className="block text-sm mb-1">Typ</label>
+            <select
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              value={type}
+              onChange={e => setType(e.target.value as 'income' | 'expense')}
+            >
               <option value="expense">Wydatek</option>
               <option value="income">Przychód</option>
             </select>
-            <div className="flex gap-2 ml-auto">
-              <Button type="submit">Zapisz</Button>
-              <DialogClose asChild><Button variant="ghost">Anuluj</Button></DialogClose>
-            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1">Kategoria</label>
+            <select
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              value={String(categoryId)}
+              onChange={e => setCategoryId(e.target.value === '' ? '' : Number(e.target.value))}
+            >
+              {visibleCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1">Tytuł</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="Np. zakupy, pensja..."
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1">Kwota</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1">Data</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <DialogClose asChild>
+              <Button variant="ghost" type="button">Anuluj</Button>
+            </DialogClose>
+            <Button type="submit">Zapisz</Button>
           </div>
         </form>
       </DialogContent>
