@@ -97,9 +97,13 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 md:p-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex flex-col gap-6">
+        {/* Górny wiersz: ikonka + tytuł + wyloguj */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><Wallet className="w-8 h-8" /></div>
+            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+              <Wallet className="w-8 h-8" />
+            </div>
             <div>
               <h1 className="text-white">Menedżer Finansów</h1>
               <p className="text-blue-100 text-sm">{username}</p>
@@ -116,8 +120,8 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
           </Button>
         </div>
 
-
-      <div className="max-w-7xl mx-auto mt-6 bg-white/10 rounded-2xl p-6">
+        {/* Box z miesiącem – niżej, z odstępem dzięki gap-6 */}
+        <div className="bg-white/10 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5" />
             <h2 className="text-white capitalize">{currentMonth}</h2>
@@ -125,20 +129,26 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="text-blue-100 text-sm mb-1">Saldo miesiąca</p>
-              <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>{balance.toFixed(2)} zł</p>
+              <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                {balance.toFixed(2)} zł
+              </p>
             </div>
             <div>
               <p className="text-blue-100 text-sm mb-1">Przychody</p>
-              <p className="text-3xl text-green-300">+{totalIncome.toFixed(2)} zł</p>
+              <p className="text-3xl text-green-300">
+                +{totalIncome.toFixed(2)} zł
+              </p>
             </div>
             <div>
               <p className="text-blue-100 text-sm mb-1">Wydatki</p>
-              <p className="text-3xl text-red-300">-{totalExpenses.toFixed(2)} zł</p>
+              <p className="text-3xl text-red-300">
+                -{totalExpenses.toFixed(2)} zł
+              </p>
             </div>
           </div>
         </div>
       </div>
-
+    </div>
 
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">

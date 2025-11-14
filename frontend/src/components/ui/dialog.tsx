@@ -18,7 +18,7 @@ export function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
+        "fixed inset-0 z-[2147483646] bg-black",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
         className
@@ -28,35 +28,44 @@ export function DialogOverlay({
   );
 }
 
-export function DialogContent({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+export const DialogContent = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => {
   return (
     <DialogPortal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        className={cn(
-          "fixed top-[50%] left-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] " +
-            "rounded-lg border bg-white p-6 shadow-lg opacity-100" +
+      <div className="fixed inset-0 z-[2147483647] flex items-center justify-center">
+        <DialogOverlay className="bg-black/25 backdrop-blur-sm" />
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            // UWAGA: bez translate, centrowanie robi Grid wrapper
+            "relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-2xl",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",         
-          className
-        )}
-        {...props}
-      >
-        {children}
-        <DialogPrimitive.Close
-          className="absolute top-4 right-4 rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none"
+            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+            "backdrop-blur-none bg-opacity-100", // zero „szkła”
+            className
+          )}
+          style={{ backgroundColor: "#a277e7ff" }}
+
+          {...props}
         >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Zamknij</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
+          {children}
+          <DialogPrimitive.Close
+            className="absolute top-4 right-4 rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Zamknij</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </div>
     </DialogPortal>
   );
-}
+});
+DialogContent.displayName = "DialogContent";
+
+
+
 
 export function DialogHeader({
   className,
