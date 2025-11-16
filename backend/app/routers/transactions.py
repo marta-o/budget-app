@@ -8,23 +8,59 @@ transactions.py router
   - GET /transactions  -> list transactions for current user
   - POST /transactions -> create a transaction for current user
 """
-
-from fastapi import APIRouter, Depends, HTTPException, Header, status, Path
+from fastapi import APIRouter, Depends, HTTPException, Header, status, Path, Query
 from sqlalchemy.orm import Session
+from typing import Optional
+from datetime import date
 from .. import crud, schemas, models
 from ..database import get_db
 from ..dependencies import get_current_user
+import datetime
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 @router.get("/")
-def list_transactions(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_transactions(
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tx_type: Optional[str] = Query(None),
+    category_id: Optional[str] = Query(None),
+    start: Optional[str] = Query(None),
+    end: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+):
     """
     Return list of transactions belonging to authenticated user.
     - Uses user.person_id to filter transactions.
     - Returns list[models.Transaction] (FastAPI / Pydantic will serialize).
     """
-    return crud.get_transactions(db, user.person_id)
+    # Tolerant parsing: validate/convert incoming query params to expected types
+    ttype = None
+    if tx_type:
+        if tx_type.lower() in ("income", "expense"):
+            ttype = tx_type.lower()
+    cat_id = None
+    if category_id:
+        try:
+            cat_id = int(category_id)
+        except Exception:
+            cat_id = None
+    start_date = None
+    if start:
+        try:
+            start_date = datetime.date.fromisoformat(start)
+        except Exception:
+            start_date = None
+    end_date = None
+    if end:
+        try:
+            end_date = datetime.date.fromisoformat(end)
+        except Exception:
+            end_date = None
+
+    return crud.get_transactions(db, user.person_id, ttype, cat_id, start_date, end_date, q, skip, limit)
 
 @router.post("/")
 def add_transaction(transaction: schemas.TransactionCreate, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
