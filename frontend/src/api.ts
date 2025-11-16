@@ -25,8 +25,15 @@ export async function getProfile(token: string) {
   return handleRes(res);
 }
 
-export async function getTransactions(token: string) {
-  const res = await fetch(`${API_URL}/transactions`, {
+export async function getTransactions(token: string, filters?: Record<string, string | number | undefined>) {
+  const params = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && String(v) !== '') params.append(k, String(v));
+    });
+  }
+  const url = `${API_URL}/transactions/` + (params.toString() ? `?${params.toString()}` : '');
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return handleRes(res);

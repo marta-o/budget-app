@@ -6,10 +6,11 @@ crud.py
 """
 
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from . import models, schemas
 from passlib.context import CryptContext
 from datetime import date
-from typing import Optional
+from typing import Optional, List, Dict
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -84,18 +85,34 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate, pers
     db.refresh(db_tx)
     return db_tx
 
-def get_transactions(db: Session, person_id: int):
+def get_transactions(db: Session, person_id: int, tx_type: Optional[str] = None, category_id: Optional[int] = None,
+                     start: Optional[date] = None, end: Optional[date] = None, q: Optional[str] = None,
+                     skip: int = 0, limit: int = 100):
     """
-    Return all transaction rows for the given person_id.
-    - Returns a list of models.Transaction objects.
+    Return transaction rows for person_id applying optional filters.
+    Supported filters: tx_type ('income'|'expense'), category_id, start (date), end (date), q (text search).
+    Supports pagination via skip/limit.
+    Returns list[dict] serializable by Pydantic.
     """
-    rows = (
+    query = (
         db.query(models.Transaction, models.Category)
         .outerjoin(models.Category, models.Transaction.category_id == models.Category.id)
         .filter(models.Transaction.person_id == person_id)
-        .order_by(models.Transaction.date.desc())
-        .all()
     )
+
+    if tx_type:
+        query = query.filter(models.Transaction.type == tx_type)
+    if category_id is not None:
+        query = query.filter(models.Transaction.category_id == category_id)
+    if start:
+        query = query.filter(models.Transaction.date >= start)
+    if end:
+        query = query.filter(models.Transaction.date <= end)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(or_(models.Transaction.title.ilike(like), models.Category.name.ilike(like)))
+
+    rows = query.order_by(models.Transaction.date.desc()).offset(skip).limit(limit).all()
 
     out: List[Dict] = []
     for tx, cat in rows:

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { TransactionList } from './TransactionList';
+import { FilterTransactionDialog } from './FilterTransactionDialog';
 import { AddTransactionDialog } from './AddTransactionDialog';
 // import { SpendingChart } from './SpendingChart';
 // import { CategoryBreakdown } from './CategoryBreakdown';
@@ -24,23 +25,76 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filters 
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
+  const [filterStart, setFilterStart] = useState<string>('');
+  const [filterEnd, setFilterEnd] = useState<string>('');
+  const [q, setQ] = useState<string>('');
 
+  // Dialog state
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+
+  // When dialog opens, initialize temporary inputs from current filters
+  useEffect(() => {
+    // Dialog initialization moved to FilterTransactionDialog component
+  }, [filterDialogOpen]);
+
+  
+
+  // visible categories depend on selected filterType
+  const visibleCategories = useMemo(() => {
+    if (filterType === 'all') return categories;
+    return categories.filter(c => c.type === filterType);
+  }, [categories, filterType]);
+
+  // whether any filter is currently active (used to show a clear button)
+  const filtersActive = useMemo(() => {
+    return (
+      filterType !== 'all' ||
+      filterCategoryId !== '' ||
+      filterStart !== '' ||
+      filterEnd !== '' ||
+      q !== ''
+    );
+  }, [filterType, filterCategoryId, filterStart, filterEnd, q]);
+
+  // If selected category doesn't belong to the chosen type, reset to empty
+  useEffect(() => {
+    if (filterCategoryId === '') return;
+    const exists = visibleCategories.some(c => String(c.id) === filterCategoryId);
+    if (!exists) setFilterCategoryId('');
+  }, [filterType, visibleCategories, filterCategoryId]);
+
+  // Fetch transactions from server whenever token or filters change.
   useEffect(() => {
     let mounted = true;
     const fetchTx = async () => {
       setLoading(true);
       try {
-        const res = await getTransactions(token);
+        const filters: Record<string, string | number> = {};
+        if (filterType && filterType !== 'all') filters.tx_type = filterType;
+        if (filterCategoryId) filters.category_id = filterCategoryId;
+        if (filterStart) filters.start = filterStart;
+        if (filterEnd) filters.end = filterEnd;
+        if (q) filters.q = q;
+        const res = await getTransactions(token, filters);
         if (mounted) setTransactions(res || []);
       } catch (e: any) {
-        setError(e.message || 'Błąd pobierania');
+        if (mounted) setError(e.message || 'Błąd pobierania');
       } finally {
         if (mounted) setLoading(false);
       }
     };
-    if (token) fetchTx();
-    return () => { mounted = false; };
-  }, [token]);
+
+    const id = setTimeout(() => {
+      if (token) fetchTx();
+    }, 250); // debounce for quick filter changes
+
+    return () => { mounted = false; clearTimeout(id); };
+  }, [token, filterType, filterCategoryId, filterStart, filterEnd, q]);
 
   const currentDate = new Date();
   const currentMonth = currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
@@ -151,9 +205,49 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
     </div>
 
       <div className="max-w-4xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between items-start mb-4 gap-4">
           <h2 className="text-xl font-medium">Transakcje</h2>
-          <AddTransactionDialog onAdd={handleAdd} categories={categories} />
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <AddTransactionDialog onAdd={handleAdd} categories={categories} />
+              <FilterTransactionDialog
+                open={filterDialogOpen}
+                onOpenChange={setFilterDialogOpen}
+                initial={{ type: filterType, categoryId: filterCategoryId, start: filterStart, end: filterEnd }}
+                categories={categories}
+                onApply={(vals) => {
+                  setFilterType(vals.type);
+                  setFilterCategoryId(vals.categoryId);
+                  setFilterStart(vals.start);
+                  setFilterEnd(vals.end);
+                }}
+              />
+
+            {/* Main search button + optional inline input */}
+            <div className="flex items-center gap-2">
+              <Button className="p-2" onClick={() => setSearchVisible(prev => !prev)}>Szukaj</Button>
+              {searchVisible && (
+                <div className="flex items-center gap-2">
+                  <input
+                    placeholder="Szukaj..."
+                    value={q}
+                    onChange={e => setQ(e.target.value)}
+                    className="p-2 rounded border"
+                    onKeyDown={e => { if (e.key === 'Enter') {/* immediate search already applied via q */} }}
+                  />
+                </div>
+              )}
+            </div>
+            {filtersActive && (
+              <Button
+                variant="default"
+                className="h-10 rounded-full bg-gray-100 text-black px-4 transition-none hover:bg-gray-100 active:bg-gray-100 hover:text-black active:text-black shadow-sm focus:ring-0 focus:outline-none"
+                onClick={() => { setFilterType('all'); setFilterCategoryId(''); setFilterStart(''); setFilterEnd(''); setQ(''); }}
+              >
+                Wyczyść filtry
+              </Button>
+            )}
+          </div>
         </div>
 
         {error && <div className="text-red-600 mb-4">{error}</div>}
