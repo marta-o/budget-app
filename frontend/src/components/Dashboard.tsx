@@ -1,12 +1,10 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getTransactions , addTransaction, updateTransaction, deleteTransaction } from '../api';
-import { Wallet, TrendingUp, TrendingDown, LogOut, Calendar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Wallet, LogOut, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { TransactionList } from './TransactionList';
-import { FilterTransactionDialog } from './FilterTransactionDialog';
-import { AddTransactionDialog } from './AddTransactionDialog';
+import { Analytics } from './Analytics';
 // import { SpendingChart } from './SpendingChart';
 // import { CategoryBreakdown } from './CategoryBreakdown';
 // import { YearlyChart } from './YearlyChart';
@@ -33,33 +31,11 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   const [filterEnd, setFilterEnd] = useState<string>('');
   const [q, setQ] = useState<string>('');
 
-  // Dialog state
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [searchVisible, setSearchVisible] = useState(false);
-
-  // When dialog opens, initialize temporary inputs from current filters
-  useEffect(() => {
-    // Dialog initialization moved to FilterTransactionDialog component
-  }, [filterDialogOpen]);
-
-  
-
   // visible categories depend on selected filterType
   const visibleCategories = useMemo(() => {
     if (filterType === 'all') return categories;
     return categories.filter(c => c.type === filterType);
   }, [categories, filterType]);
-
-  // whether any filter is currently active (used to show a clear button)
-  const filtersActive = useMemo(() => {
-    return (
-      filterType !== 'all' ||
-      filterCategoryId !== '' ||
-      filterStart !== '' ||
-      filterEnd !== '' ||
-      q !== ''
-    );
-  }, [filterType, filterCategoryId, filterStart, filterEnd, q]);
 
   // If selected category doesn't belong to the chosen type, reset to empty
   useEffect(() => {
@@ -97,7 +73,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   }, [token, filterType, filterCategoryId, filterStart, filterEnd, q]);
 
   const currentDate = new Date();
-  const currentMonth = currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
   const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
@@ -152,7 +127,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 md:p-6">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
-        {/* Górny wiersz: ikonka + tytuł + wyloguj */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
@@ -163,97 +137,86 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
               <p className="text-blue-100 text-sm">{username}</p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            className="text-white hover:bg-white/20 gap-2"
-            onClick={onLogout}
-            aria-label="Wyloguj"
-          >
-            <LogOut className="w-4 h-4" />
-            Wyloguj
-          </Button>
+            <Button variant="ghost" className="text-white hover:bg-white/20 gap-2" onClick={onLogout} aria-label="Wyloguj">
+              <LogOut className="w-4 h-4" /> Wyloguj
+            </Button>
         </div>
 
         {/* Box z miesiącem – niżej, z odstępem dzięki gap-6 */}
-        <div className="bg-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="w-5 h-5" />
-            <h2 className="text-white capitalize">{currentMonth}</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-blue-100 text-sm mb-1">Saldo miesiąca</p>
-              <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                {balance.toFixed(2)} zł
-              </p>
+          <div className="bg-white/10 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="w-5 h-5" />
+              <h2 className="text-white capitalize">{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
             </div>
-            <div>
-              <p className="text-blue-100 text-sm mb-1">Przychody</p>
-              <p className="text-3xl text-green-300">
-                +{totalIncome.toFixed(2)} zł
-              </p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm mb-1">Wydatki</p>
-              <p className="text-3xl text-red-300">
-                -{totalExpenses.toFixed(2)} zł
-              </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-blue-100 text-sm mb-1">Saldo miesiąca</p>
+                <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>{balance.toFixed(2)} zł</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm mb-1">Przychody</p>
+                <p className="text-3xl text-green-300">+{totalIncome.toFixed(2)} zł</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm mb-1">Wydatki</p>
+                <p className="text-3xl text-red-300">-{totalExpenses.toFixed(2)} zł</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <Tabs defaultValue="transactions" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="transactions">Transakcje</TabsTrigger>
+          <TabsTrigger value="analytics">Analityka</TabsTrigger>
+          <TabsTrigger value="planning">Planowanie</TabsTrigger>
+          <TabsTrigger value="news">Edukacja</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="transactions" className="space-y-4">
+          <TransactionList
+            transactions={transactions}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            categories={categories}
+            onAdd={handleAdd}
+            q={q}
+            setQ={setQ}
+            onApplyFilters={({ type, categoryId, start, end }) => {
+              setFilterType(type);
+              setFilterCategoryId(categoryId);
+              setFilterStart(start);
+              setFilterEnd(end);
+            }}
+            onClearFilters={() => {
+              setFilterType('all');
+              setFilterCategoryId('');
+              setFilterStart('');
+              setFilterEnd('');
+              setQ('');
+            }}
+            currentFilters={{ type: filterType, categoryId: filterCategoryId, start: filterStart, end: filterEnd }}
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <Analytics transactions={transactions} categories={categories} />
+        </TabsContent>
+
+        <TabsContent value="planning" className="space-y-4">
+          <div className="bg-white rounded-lg p-4 shadow-sm">Planowanie — jeszcze w budowie</div>
+        </TabsContent>
+
+        <TabsContent value="news" className="space-y-4">
+          <div className="bg-white rounded-lg p-4 shadow-sm">Edukacja — jeszcze w budowie</div>
+        </TabsContent>
+      </Tabs>
 
       <div className="max-w-4xl mx-auto p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between items-start mb-4 gap-4">
-          <h2 className="text-xl font-medium">Transakcje</h2>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <AddTransactionDialog onAdd={handleAdd} categories={categories} />
-              <FilterTransactionDialog
-                open={filterDialogOpen}
-                onOpenChange={setFilterDialogOpen}
-                initial={{ type: filterType, categoryId: filterCategoryId, start: filterStart, end: filterEnd }}
-                categories={categories}
-                onApply={(vals) => {
-                  setFilterType(vals.type);
-                  setFilterCategoryId(vals.categoryId);
-                  setFilterStart(vals.start);
-                  setFilterEnd(vals.end);
-                }}
-              />
-
-            {/* Main search button + optional inline input */}
-            <div className="flex items-center gap-2">
-              <Button className="p-2" onClick={() => setSearchVisible(prev => !prev)}>Szukaj</Button>
-              {searchVisible && (
-                <div className="flex items-center gap-2">
-                  <input
-                    placeholder="Szukaj..."
-                    value={q}
-                    onChange={e => setQ(e.target.value)}
-                    className="p-2 rounded border"
-                    onKeyDown={e => { if (e.key === 'Enter') {/* immediate search already applied via q */} }}
-                  />
-                </div>
-              )}
-            </div>
-            {filtersActive && (
-              <Button
-                variant="default"
-                className="h-10 rounded-full bg-gray-100 text-black px-4 transition-none hover:bg-gray-100 active:bg-gray-100 hover:text-black active:text-black shadow-sm focus:ring-0 focus:outline-none"
-                onClick={() => { setFilterType('all'); setFilterCategoryId(''); setFilterStart(''); setFilterEnd(''); setQ(''); }}
-              >
-                Wyczyść filtry
-              </Button>
-            )}
-          </div>
-        </div>
-
         {error && <div className="text-red-600 mb-4">{error}</div>}
-        {loading ? <div>Ładowanie...</div> : (
-          <TransactionList transactions={transactions} onDelete={handleDelete} onEdit={handleEdit} categories={categories} />
-        )}
+        {loading ? <div>Ładowanie...</div> : null}
       </div>
     </div>
   );

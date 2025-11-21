@@ -42,7 +42,6 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
     };
     onAdd(payload);
 
-    // reset formularza
     setTitle('');
     setAmount('');
     setCategoryId('');
