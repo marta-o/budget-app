@@ -167,7 +167,19 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </div>
       </div>
 
-      <Tabs defaultValue="transactions" className="space-y-4">
+      <Tabs
+        defaultValue="transactions"
+        className="space-y-4"
+        onValueChange={(v) => {
+          if (v !== 'transactions') {
+            setFilterType('all');
+            setFilterCategoryId('');
+            setFilterStart('');
+            setFilterEnd('');
+            setQ('');
+          }
+        }}
+      >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="transactions">Transakcje</TabsTrigger>
           <TabsTrigger value="analytics">Analityka</TabsTrigger>
@@ -202,7 +214,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <Analytics transactions={transactions} categories={categories} />
+          <Analytics transactions={transactions} categories={categories} token={token} />
         </TabsContent>
 
         <TabsContent value="planning" className="space-y-4">

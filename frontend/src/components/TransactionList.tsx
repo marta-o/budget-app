@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowUpCircle, ArrowDownCircle, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -7,6 +7,7 @@ import { Transaction, Category } from '../App';
 import { EditTransactionDialog } from './EditTransactionDialog';
 import { DeleteTransactionDialog} from './DeleteTransactionDialog';
 import { AddTransactionDialog } from './AddTransactionDialog';
+import Dropdown from './ui/dropdown';
 import { FilterTransactionDialog } from './FilterTransactionDialog';
 
 interface FilterVals {
@@ -15,6 +16,7 @@ interface FilterVals {
   start: string;
   end: string;
 }
+
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -27,6 +29,8 @@ interface TransactionListProps {
   onApplyFilters: (vals: FilterVals) => void;
   onClearFilters: () => void;
   currentFilters: FilterVals;
+  showFilters?: boolean;
+  onToggleFilters?: () => void;
 }
 
 export function TransactionList({
@@ -40,12 +44,24 @@ export function TransactionList({
   onApplyFilters,
   onClearFilters,
   currentFilters,
+  showFilters,
+  onToggleFilters,
 }: TransactionListProps) {
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [toDelete, setToDelete] = useState<Transaction | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [localShowFilters, setLocalShowFilters] = useState(false);
+  const filtersRef = useRef<HTMLDivElement | null>(null);
+
+  const effectiveShowFilters = (typeof showFilters !== 'undefined') ? showFilters : localShowFilters;
+
+  useEffect(() => {
+    if (effectiveShowFilters) {
+      setTimeout(() => filtersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50);
+    }
+  }, [effectiveShowFilters]);
 
   const visibleCategories = categories.filter(c =>
     currentFilters.type === 'all' ? true : c.type === currentFilters.type
@@ -80,7 +96,6 @@ export function TransactionList({
   };
 
   const applyFilterChange = (partial: Partial<FilterVals>) => {
-    // if changing type, ensure categoryId cleared when invalid
     const next = { ...currentFilters, ...partial } as FilterVals;
     if (partial.type && partial.type !== 'all') {
       const exists = categories.some(c => String(c.id) === String(next.categoryId) && c.type === partial.type);
@@ -96,15 +111,38 @@ export function TransactionList({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <AddTransactionDialog onAdd={onAdd} categories={categories} />
+          <Button variant="default" onClick={() => { if (onToggleFilters) { onToggleFilters(); } else { setLocalShowFilters(v => !v); } }}>
+            Filtruj
+          </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="default" onClick={() => { setSearchVisible(prev => !prev); if (!searchVisible) setTimeout(() => (document.getElementById('tx-search') as HTMLInputElement)?.focus(), 0); }}>
+          <Button
+            variant="default"
+            onClick={() => {
+              setSearchVisible(prev => {
+                const next = !prev;
+                if (!next) {
+                  setQ('');
+                } else {
+                  setTimeout(() => (document.getElementById('tx-search') as HTMLInputElement)?.focus(), 0);
+                }
+                return next;
+              });
+            }}
+          >
             Szukaj
           </Button>
+
+          {q && (
+            <Button variant="ghost" onClick={() => setQ('')}>Wyczyść</Button>
+          )}
+
           {searchVisible && (
             <input
               id="tx-search"
+              name="tx-search"
+              autoComplete="off"
               placeholder="Szukaj..."
               value={q}
               onChange={e => setQ(e.target.value)}
@@ -114,56 +152,50 @@ export function TransactionList({
          </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-white/5 p-2 rounded-md">
-        <label className="flex items-center gap-2">
-          <span className="text-sm">Typ</span>
-          <select
-            className="border px-3 py-1 rounded"
-            value={currentFilters.type}
-            onChange={(e) => applyFilterChange({ type: e.target.value as FilterVals['type'] })}
-          >
-            <option value="all">Wszystkie</option>
-            <option value="expense">Wydatek</option>
-            <option value="income">Przychód</option>
-          </select>
-        </label>
+      {effectiveShowFilters && (
+        <div ref={filtersRef} id="filters-block" className="mb-4 flex items-center gap-2 bg-white p-2 rounded-md">
+          <label className="flex items-center gap-2">
+            <span className="text-sm">Typ</span>
+            <div className="w-40">
+              <Dropdown
+                value={currentFilters.type}
+                options={[{ value: 'all', label: 'Wszystkie' }, { value: 'expense', label: 'Wydatek' }, { value: 'income', label: 'Przychód' }]}
+                onChange={(v) => applyFilterChange({ type: v as FilterVals['type'] })}
+              />
+            </div>
+          </label>
 
-        <label className="flex items-center gap-2">
-          <span className="text-sm">Kategoria</span>
-          <select
-            className="border px-3 py-1 rounded"
-            value={currentFilters.categoryId}
-            onChange={(e) => applyFilterChange({ categoryId: e.target.value })}
-          >
-            <option value="">Wszystkie</option>
-            {visibleCategories.map(c => (
-              <option key={c.id} value={String(c.id)}>{c.name}</option>
-            ))}
-          </select>
-        </label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm">Kategoria</span>
+            <div className="w-48">
+              <Dropdown
+                value={currentFilters.categoryId}
+                options={[{ value: '', label: 'Wszystkie' }, ...visibleCategories.map(c => ({ value: String(c.id), label: c.name }))]}
+                onChange={(v) => applyFilterChange({ categoryId: v as string })}
+              />
+            </div>
+          </label>
 
-        <label className="flex items-center gap-2">
-          <span className="text-sm">Od</span>
-          <input
-            type="date"
-            className="border px-2 py-1 rounded"
-            value={currentFilters.start}
-            onChange={(e) => applyFilterChange({ start: e.target.value })}
-          />
-        </label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm">Od</span>
+            <input
+              type="date"
+              className="border border-slate-300 px-2 py-1 rounded-md bg-white"
+              value={currentFilters.start}
+              onChange={(e) => applyFilterChange({ start: e.target.value })}
+            />
+            <span className="text-sm">Do</span>
+            <input
+              type="date"
+              className="border border-slate-300 px-2 py-1 rounded-md bg-white"
+              value={currentFilters.end}
+              onChange={(e) => applyFilterChange({ end: e.target.value })}
+            />
+          </label>
 
-        <label className="flex items-center gap-2">
-          <span className="text-sm">Do</span>
-          <input
-            type="date"
-            className="border px-2 py-1 rounded"
-            value={currentFilters.end}
-            onChange={(e) => applyFilterChange({ end: e.target.value })}
-          />
-        </label>
-
-        <Button variant="ghost" onClick={onClearFilters}>Wyczyść</Button>
-      </div>
+          <Button variant="ghost" onClick={onClearFilters}>Wyczyść</Button>
+        </div>
+      )}
 
       {/* <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -246,6 +278,8 @@ export function TransactionList({
           </div>
         </CardContent>
       </Card>
+
+      
 
       <EditTransactionDialog
         open={isEditOpen}
