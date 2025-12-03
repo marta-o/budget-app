@@ -108,10 +108,14 @@ export function TransactionList({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="w-full flex justify-center items-center gap-3 mb-4">
         <div className="flex items-center gap-2">
           <AddTransactionDialog onAdd={onAdd} categories={categories} />
-          <Button variant="default" onClick={() => { if (onToggleFilters) { onToggleFilters(); } else { setLocalShowFilters(v => !v); } }}>
+          <Button 
+            variant="ghost"
+            style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+            className="border-0 hover:bg-[#7ecfff]"
+            onClick={() => { if (onToggleFilters) { onToggleFilters(); } else { setLocalShowFilters(v => !v); } }}>
             Filtruj
           </Button>
         </div>
@@ -119,17 +123,19 @@ export function TransactionList({
         <div className="flex items-center gap-2">
           <Button
             variant="default"
-            onClick={() => {
-              setSearchVisible(prev => {
-                const next = !prev;
-                if (!next) {
-                  setQ('');
-                } else {
-                  setTimeout(() => (document.getElementById('tx-search') as HTMLInputElement)?.focus(), 0);
-                }
-                return next;
-              });
-            }}
+            className="border-0"
+            style={{ backgroundColor: "#94DAFF", color: "#0f172a" }}
+             onClick={() => {
+               setSearchVisible(prev => {
+                 const next = !prev;
+                 if (!next) {
+                   setQ('');
+                 } else {
+                   setTimeout(() => (document.getElementById('tx-search') as HTMLInputElement)?.focus(), 0);
+                 }
+                 return next;
+               });
+             }}
           >
             Szukaj
           </Button>

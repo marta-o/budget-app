@@ -187,3 +187,15 @@
 html {
   font-size: var(--font-size);
 }
+
+button[data-btn-filter="true"] {
+  background-color: #94DAFF !important;
+  color: #000000 !important;
+  border: none !important;
+}
+
+button[data-btn-filter="true"]:hover {
+  background-color: #7ecfff !important;
+}
+
+

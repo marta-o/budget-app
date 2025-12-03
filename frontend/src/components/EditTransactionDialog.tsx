@@ -175,14 +175,19 @@ export function EditTransactionDialog({
             <DialogClose asChild>
               <Button
                 variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="border-0 !bg-[#94DAFF] !text-black"
+                style={{ backgroundColor: "#94DAFF", color: "#000000" }}
                 type="button"
               >
                 Anuluj
               </Button>
             </DialogClose>
-
-            <Button type="submit">
+  
+            <Button
+              type="submit"
+              className="!bg-[#ffffffff] !text-black"
+              style={{ backgroundColor: "#ffffffff", color: "#000000" }}
+            >
               Zapisz zmiany
             </Button>
           </div>

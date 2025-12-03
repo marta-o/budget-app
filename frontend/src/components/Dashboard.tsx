@@ -125,21 +125,27 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 md:p-6">
+      <div className="text-white p-4 md:p-6" style={{ backgroundColor: "#B983FF" }}>
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-              <Wallet className="w-8 h-8" />
+            <div className="p-3 rounded-xl" style={{ backgroundColor: "#94B3FD" }}>
+              <Wallet className="w-8 h-8 text-white" />
             </div>
             <div>
               <h1 className="text-white">Menedżer Finansów</h1>
-              <p className="text-blue-100 text-sm">{username}</p>
+              <p className="text-black text-sm">{username}</p>
             </div>
           </div>
-            <Button variant="ghost" className="text-white hover:bg-white/20 gap-2" onClick={onLogout} aria-label="Wyloguj">
-              <LogOut className="w-4 h-4" /> Wyloguj
-            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-white hover:bg-white/20 gap-2" 
+              onClick={onLogout} 
+              aria-label="Wyloguj"
+              style={{ backgroundColor: "#94B3FD", color: "#000000" }}
+          >
+  <LogOut className="w-4 h-4" /> Wyloguj
+</Button>
         </div>
 
         {/* Box z miesiącem – niżej, z odstępem dzięki gap-6 */}
@@ -151,15 +157,15 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-blue-100 text-sm mb-1">Saldo miesiąca</p>
+                <p className="text-black text-sm mb-1">Saldo miesiąca</p>
                 <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>{balance.toFixed(2)} zł</p>
               </div>
               <div>
-                <p className="text-blue-100 text-sm mb-1">Przychody</p>
+                <p className="text-black text-sm mb-1">Przychody</p>
                 <p className="text-3xl text-green-300">+{totalIncome.toFixed(2)} zł</p>
               </div>
               <div>
-                <p className="text-blue-100 text-sm mb-1">Wydatki</p>
+                <p className="text-black text-sm mb-1">Wydatki</p>
                 <p className="text-3xl text-red-300">-{totalExpenses.toFixed(2)} zł</p>
               </div>
             </div>
@@ -167,24 +173,37 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </div>
       </div>
 
+      {/*space between header and tabs*/}
+      <div style={{ marginTop: "2rem" }}>
       <Tabs
         defaultValue="transactions"
         className="space-y-4"
         onValueChange={(v) => {
-          if (v !== 'transactions') {
-            setFilterType('all');
-            setFilterCategoryId('');
-            setFilterStart('');
-            setFilterEnd('');
-            setQ('');
+          if (v !== "transactions") {
+            setFilterType("all");
+            setFilterCategoryId("");
+            setFilterStart("");
+            setFilterEnd("");
+            setQ("");
           }
         }}
       >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="transactions">Transakcje</TabsTrigger>
-          <TabsTrigger value="analytics">Analityka</TabsTrigger>
-          <TabsTrigger value="planning">Planowanie</TabsTrigger>
-          <TabsTrigger value="news">Edukacja</TabsTrigger>
+        <TabsList
+          className="grid w-full grid-cols-4 rounded-2xl p-1 !bg-[#94DAFF] !text-black"
+          style={{ backgroundColor: "#94DAFF" }} // kolor paska
+        >
+          <TabsTrigger value="transactions" className="!text-black">
+            Transakcje
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="!text-black">
+            Analityka
+          </TabsTrigger>
+          <TabsTrigger value="planning" className="!text-black">
+            Planowanie
+          </TabsTrigger>
+          <TabsTrigger value="news" className="!text-black">
+            Edukacja
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions" className="space-y-4">
@@ -225,7 +244,8 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
           <div className="bg-white rounded-lg p-4 shadow-sm">Edukacja — jeszcze w budowie</div>
         </TabsContent>
       </Tabs>
-
+      </div>
+ 
       <div className="max-w-4xl mx-auto p-6">
         {error && <div className="text-red-600 mb-4">{error}</div>}
         {loading ? <div>Ładowanie...</div> : null}

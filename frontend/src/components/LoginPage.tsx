@@ -38,10 +38,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#B983FF" }}>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-2xl w-fit">
+          <div className="mx-auto p-4 rounded-2xl w-fit" style={{ backgroundColor: "#94B3FD" }}>
             <Wallet className="w-12 h-12 text-white" />
           </div>
           <div>
@@ -75,8 +75,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 required
               />
             </div>
-            <Button type="submit" className="w-full gap-2">
-              <LogIn className="w-4 h-4" />
+            <Button type="submit" className="w-full gap-2" style={{ backgroundColor: "#94DAFF", color: "#000000" }}>
+              <LogIn className="w-4 h-4"/>
               Zaloguj się
             </Button>
           </form>
