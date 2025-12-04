@@ -70,27 +70,32 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
   const totalExpense = filteredTx.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
 
   return (
-    <div className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-end gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm">Rok</label>
-              <div className="w-40">
-                <Dropdown
-                  value={year}
-                  options={[{ value: '', label: 'Wszystkie' }, ...years.map(y => ({ value: String(y), label: String(y) }))]}
-                  onChange={(v) => setYear(v as string)}
-                />
-              </div>
-            </div>
-          </div>
+  <div className="space-y-4">
+    <div className="flex flex-col items-center gap-4">
+      {/* Rok */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm">Rok</label>
+        <div className="w-40">
+          <Dropdown
+            value={year}
+            options={[{ value: '', label: 'Wszystkie' }, ...years.map(y => ({ value: String(y), label: String(y) }))]}
+            onChange={(v) => setYear(v as string)}
+          />
+        </div>
+      </div>
 
-      <div className="flex items-center gap-2 bg-white p-2 rounded-md">
-          <div className="flex items-center gap-2">
+      {/* Typ / Kategoria / Daty / Wyczyść */}
+      <div className="flex flex-wrap items-center justify-center gap-2 bg-white p-2 rounded-md">
+        <div className="flex items-center gap-2">
           <label className="text-sm">Typ</label>
           <div className="w-40">
             <Dropdown
               value={type}
-              options={[{ value: 'all', label: 'Wszystkie' }, { value: 'income', label: 'Przychód' }, { value: 'expense', label: 'Wydatek' }]}
+              options={[
+                { value: 'all', label: 'Wszystkie' },
+                { value: 'income', label: 'Przychód' },
+                { value: 'expense', label: 'Wydatek' }
+              ]}
               onChange={(v) => setType(v as any)}
             />
           </div>
@@ -111,46 +116,80 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
 
         <div className="flex items-center gap-2">
           <label className="text-sm">Od</label>
-          <input type="date" value={start} onChange={e => setStart(e.target.value)} className="border border-slate-300 px-3 py-2 rounded-md bg-white" />
+          <input
+            type="date"
+            value={start}
+            onChange={e => setStart(e.target.value)}
+            className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+          />
         </div>
 
         <div className="flex items-center gap-2">
           <label className="text-sm">Do</label>
-          <input type="date" value={end} onChange={e => setEnd(e.target.value)} className="border border-slate-300 px-3 py-2 rounded-md bg-white" />
+          <input
+            type="date"
+            value={end}
+            onChange={e => setEnd(e.target.value)}
+            className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+          />
         </div>
 
         <div>
-          <Button variant="ghost" onClick={() => { setYear(''); setType('all'); setCategoryId([] as string[]); setStart(''); setEnd(''); }}>Wyczyść</Button>
-        </div>
-      </div>
-      
-      <div className="flex items-stretch gap-4">
-        <div className="bg-white rounded-lg p-4 shadow-sm w-full">
-          <p className="text-sm text-slate-500">Saldo (wybrane)</p>
-          <p className="text-2xl font-semibold">{(totalIncome - totalExpense).toFixed(2)} zł</p>
-        </div>
-        <div className="bg-white rounded-lg p-4 shadow-sm w-full">
-          <p className="text-sm text-slate-500">Przychody (wybrane)</p>
-          <p className="text-2xl text-green-600 font-semibold">+{totalIncome.toFixed(2)} zł</p>
-        </div>
-        <div className="bg-white rounded-lg p-4 shadow-sm w-full">
-          <p className="text-sm text-slate-500">Wydatki (wybrane)</p>
-          <p className="text-2xl text-red-600 font-semibold">-{totalExpense.toFixed(2)} zł</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <h3 className="font-medium mb-2">Rozkład wydatków wg kategorii</h3>
-          <CategoryBreakdown transactions={filteredTx} />
-        </div>
-
-        <div>
-          <h3 className="font-medium mb-2">Przychody i wydatki</h3>
-          <YearlyChart transactions={filteredTx} year={year ? Number(year) : undefined} />
+          <Button
+            onClick={() => {
+              setYear('');
+              setType('all');
+              setCategoryId([] as string[]);
+              setStart('');
+              setEnd('');
+            }}
+            style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+          >
+          Wyczyść
+            </Button>
         </div>
       </div>
     </div>
+
+      
+      <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-4 max-w-4xl w-full">
+        <div className="bg-white rounded-lg p-4 shadow-sm w-64 text-center">
+        <p className="text-sm text-slate-500">Saldo (wybrane)</p>
+        <p className="text-2xl font-semibold">
+          {(totalIncome - totalExpense).toFixed(2)} zł
+        </p>
+        </div>
+
+        <div className="bg-white rounded-lg p-4 shadow-sm w-64 text-center">
+          <p className="text-sm text-slate-500">Przychody (wybrane)</p>
+          <p className="text-2xl text-green-600 font-semibold">
+            +{totalIncome.toFixed(2)} zł
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg p-4 shadow-sm w-64 text-center">
+          <p className="text-sm text-slate-500">Wydatki (wybrane)</p>
+          <p className="text-2xl text-red-600 font-semibold">
+            -{totalExpense.toFixed(2)} zł
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="text-center">
+        <h3 className="font-medium mb-2">Rozkład wydatków wg kategorii</h3>
+          <CategoryBreakdown transactions={filteredTx} />
+      </div>
+
+      <div className="text-center">
+        <h3 className="font-medium mb-2">Przychody i wydatki</h3>
+          <YearlyChart transactions={filteredTx} year={year ? Number(year) : undefined} />
+      </div>
+    </div>
+  </div>
   );
 }
 

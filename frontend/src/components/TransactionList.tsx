@@ -230,8 +230,8 @@ export function TransactionList({
       </div> */}
     
       <Card>
-        <CardHeader>
-          <CardTitle>Ostatnie Transakcje</CardTitle>
+        <CardHeader> 
+          <CardTitle  style={{fontWeight: 700 }}>Ostatnie Transakcje</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

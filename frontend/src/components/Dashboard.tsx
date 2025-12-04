@@ -156,15 +156,15 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+              <div className="text-left">
                 <p className="text-black text-sm mb-1">Saldo miesiąca</p>
                 <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>{balance.toFixed(2)} zł</p>
               </div>
-              <div>
+              <div className="text-center">
                 <p className="text-black text-sm mb-1">Przychody</p>
                 <p className="text-3xl text-green-300">+{totalIncome.toFixed(2)} zł</p>
               </div>
-              <div>
+              <div className="text-right">
                 <p className="text-black text-sm mb-1">Wydatki</p>
                 <p className="text-3xl text-red-300">-{totalExpenses.toFixed(2)} zł</p>
               </div>
