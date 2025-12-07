@@ -72,3 +72,12 @@ export async function getCategories(token?: string, type?: string) {
   const res = await fetch(`${API_URL}/categories/${q}`, { headers });
   return handleRes(res);
 }
+
+export async function register(payload: Record<string, any>) {
+  const res = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return handleRes(res);
+}

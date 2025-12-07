@@ -15,31 +15,17 @@ from typing import Optional, List, Dict
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password):
-    """
-    Generate bcrypt hash for given plaintext password.
-    - Used when creating new users (recommended for production).
-    """
+    """Hash password using bcrypt"""
     return pwd_context.hash(password)
 
-def verify_password(plain_password, stored_password):
-    """
-    Development helper: compare plaintext password provided by client with
-    the value stored in DB (stored_password).
-    - This does NOT perform secure hash verification.
-    - Accepts stored_password as str or bytes and normalizes whitespace.
-    - Returns True only if normalized stored_password equals plain_password.
-    - Use hashed verification (passlib.verify) for production.
-    """
-    if stored_password is None:
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify bcrypt hashed password"""
+    if not hashed_password:
         return False
     try:
-        if isinstance(stored_password, (bytes, bytearray)):
-            sp = stored_password.decode("utf-8", errors="ignore")
-        else:
-            sp = str(stored_password)
+        return pwd_context.verify(plain_password, hashed_password)
     except Exception:
-        sp = str(stored_password)
-    return plain_password == sp.strip()
+        return False
 
 def get_user_by_username(db: Session, username: str):
     """
@@ -48,14 +34,26 @@ def get_user_by_username(db: Session, username: str):
     """
     return db.query(models.User).filter(models.User.username == username).first()
 
+def get_user_by_username(db: Session, username: str):
+    return db.query(models.User).filter(models.User.username == username).first()
+
 def create_user(db: Session, user: schemas.UserCreate):
-    """
-    Create a new user record in the DB.
-    - Hashes password using get_password_hash before saving (currently creates hashed value).
-    - Returns the created models.User instance.
-    """
+    """Create person + hashed login"""
+    db_person = models.Person(
+        first_name=user.first_name,
+        last_name=user.last_name,
+        age=user.age,
+        household_status=user.household_status,
+    )
+    db.add(db_person)
+    db.flush()
+    
     hashed_pw = get_password_hash(user.password)
-    db_user = models.User(username=user.username, password=hashed_pw)
+    db_user = models.User(
+        username=user.username,
+        password=hashed_pw,
+        person_id=db_person.id,
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -63,8 +61,8 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 def create_transaction(db: Session, transaction: schemas.TransactionCreate, person_id: int):
     """
-    Create a new Transaction/Expense record associated with a person.
-    - Automatically sets date to current UTC time and type to 'expense'.
+    Create a new transaction for the given person_id.
+    - Returns the created models.Transaction instance.
     """
     tx_date = transaction.date if getattr(transaction, "date", None) else date.today()
     if isinstance(tx_date, str):
@@ -89,10 +87,13 @@ def get_transactions(db: Session, person_id: int, tx_type: Optional[str] = None,
                      start: Optional[date] = None, end: Optional[date] = None, q: Optional[str] = None,
                      skip: int = 0, limit: int = 100):
     """
-    Return transaction rows for person_id applying optional filters.
-    Supported filters: tx_type ('income'|'expense'), category_id, start (date), end (date), q (text search).
-    Supports pagination via skip/limit.
-    Returns list[dict] serializable by Pydantic.
+    Retrieve transactions for a given person_id with optional filters.
+    - tx_type: filter by 'income' or 'expense'
+    - category_id: filter by specific category
+    - start, end: date range filter
+    - q: search query in title or category name
+    - skip, limit: pagination
+    - Returns list of dicts with transaction and category name.
     """
     query = (
         db.query(models.Transaction, models.Category)
@@ -129,10 +130,8 @@ def get_transactions(db: Session, person_id: int, tx_type: Optional[str] = None,
 
 def update_transaction(db: Session, tx_id: int, transaction: schemas.TransactionCreate, person_id: int):
     """
-    Update an existing transaction record.
-    - Only allows updating transactions owned by person_id.
-    - Returns updated models.Transaction or None if not found.
-    """
+    Update an existing transaction by ID for the given person_id.
+    - Returns updated transaction or None if not found."""
     db_tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id, models.Transaction.person_id == person_id).first()
     if not db_tx:
         return None

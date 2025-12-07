@@ -36,7 +36,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return created
 
 @router.post("/login")
-def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     """
     Login endpoint.
     - Expects JSON body matching schemas.UserCreate (username, password).
@@ -44,8 +44,8 @@ def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
     - On success returns a JSON containing access_token.
     - On failure raises HTTPException(401).
     """
-    db_user = crud.get_user_by_username(db, user.username)
-    if not db_user or not crud.verify_password(user.password, db_user.password):
+    db_user = crud.get_user_by_username(db, credentials.username)
+    if not db_user or not crud.verify_password(credentials.password, db_user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     token = create_access_token(db_user.username)
     return {"access_token": token, "token_type": "bearer"}

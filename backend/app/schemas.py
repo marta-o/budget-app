@@ -10,6 +10,11 @@ from datetime import date
 from typing import Optional
 from typing import Literal
 
+class UserLogin(BaseModel):
+    """Schema for login - only username and password"""
+    username: str
+    password: str
+
 class UserCreate(BaseModel):
     """
     Input schema used for registration and login requests.
@@ -17,6 +22,10 @@ class UserCreate(BaseModel):
     """
     username: str
     password: str
+    first_name: str
+    last_name: str
+    age: int | None = None
+    household_status: str | None = None
 
 class UserOut(BaseModel):
     id: int

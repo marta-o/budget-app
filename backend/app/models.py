@@ -27,9 +27,9 @@ class Person(Base):
     first_name = Column(String)
     last_name = Column(String)
     age = Column(Integer)
-    household_status = Column(String)
+    household_status = Column("houshold_status", String)
 
-    user = relationship("User", back_populates="person", uselist=False)
+    logins = relationship("User", back_populates="person")
     transactions = relationship("Transaction", back_populates="person")
 
 class User(Base):
@@ -50,7 +50,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     password = Column(String)
 
-    person = relationship("Person", back_populates="user")
+    person = relationship("Person", back_populates="logins")
 
 class Category(Base):
     """

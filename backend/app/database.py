@@ -9,10 +9,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
-# BASE_DIR = Path(__file__).parent.parent.parent
-# DATABASE_PATH = BASE_DIR / "MoneyManagement.db"
-
-# SQLALCHEMY_DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 SQLALCHEMY_DATABASE_URL = settings.SQLALCHEMY_DATABASE_URL
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
