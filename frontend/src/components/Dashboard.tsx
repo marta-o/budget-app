@@ -124,7 +124,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
       <div className="text-white p-4 md:p-6" style={{ backgroundColor: "#B983FF" }}>
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
@@ -148,7 +147,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 </Button>
         </div>
 
-        {/* Box z miesiącem – niżej, z odstępem dzięki gap-6 */}
           <div className="bg-white/10 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-5 h-5" />
@@ -156,18 +154,28 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-left">
+
+              <div className="flex flex-col items-center text-center rounded-xl border border-white/30 bg-white/10 backdrop-blur-md p-4 shadow-lg">
                 <p className="text-black text-sm mb-1">Saldo miesiąca</p>
-                <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>{balance.toFixed(2)} zł</p>
+                <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                {balance.toFixed(2)} zł
+                </p>
               </div>
-              <div className="text-center">
+
+              <div className="flex flex-col items-center text-center rounded-xl border border-white/30 bg-white/10 backdrop-blur-md p-4 shadow-lg">
                 <p className="text-black text-sm mb-1">Przychody</p>
-                <p className="text-3xl text-green-300">+{totalIncome.toFixed(2)} zł</p>
+                <p className="text-3xl text-green-300">
+                +{totalIncome.toFixed(2)} zł
+                </p>
               </div>
-              <div className="text-right">
+
+              <div className="flex flex-col items-center text-center rounded-xl border border-white/30 bg-white/10 backdrop-blur-md p-4 shadow-lg">
                 <p className="text-black text-sm mb-1">Wydatki</p>
-                <p className="text-3xl text-red-300">-{totalExpenses.toFixed(2)} zł</p>
+                <p className="text-3xl text-red-300">
+                -{totalExpenses.toFixed(2)} zł
+                </p>
               </div>
+
             </div>
           </div>
         </div>
@@ -190,7 +198,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
       >
         <TabsList
           className="grid w-full grid-cols-4 rounded-2xl p-1 !bg-[#94DAFF] !text-black"
-          style={{ backgroundColor: "#94DAFF" }} // kolor paska
+          style={{ backgroundColor: "#94DAFF" }} //kolor paska
         >
           <TabsTrigger value="transactions" className="!text-black">
             Transakcje

@@ -113,7 +113,7 @@ export function TransactionList({
           <AddTransactionDialog onAdd={onAdd} categories={categories} />
           <Button 
             variant="ghost"
-            style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+            style={{ backgroundColor: "#94B3FD", color: "#000000" }}
             className="border-0 hover:bg-[#7ecfff]"
             onClick={() => { if (onToggleFilters) { onToggleFilters(); } else { setLocalShowFilters(v => !v); } }}>
             Filtruj
@@ -124,7 +124,7 @@ export function TransactionList({
           <Button
             variant="default"
             className="border-0"
-            style={{ backgroundColor: "#94DAFF", color: "#0f172a" }}
+            style={{ backgroundColor: "#94B3FD", color: "#0f172a" }}
              onClick={() => {
                setSearchVisible(prev => {
                  const next = !prev;

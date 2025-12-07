@@ -6,7 +6,16 @@ interface CategoryBreakdownProps {
   transactions: Transaction[];
 }
 
-const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const COLORS = [
+  '#A78BFA', //
+  '#ca5cf6ff', 
+  '#60A5FA', 
+  '#B983FF', 
+  '#94B3FD', 
+  '#7C3AED', 
+  '#6cb6d8ff', //
+  '#60eceeff', 
+];
 
 export function CategoryBreakdown({ transactions }: CategoryBreakdownProps) {
   // Group expenses by category

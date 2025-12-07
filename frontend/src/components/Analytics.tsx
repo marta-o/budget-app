@@ -72,20 +72,18 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
   return (
   <div className="space-y-4">
     <div className="flex flex-col items-center gap-4">
-      {/* Rok */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm">Rok</label>
-        <div className="w-40">
-          <Dropdown
-            value={year}
-            options={[{ value: '', label: 'Wszystkie' }, ...years.map(y => ({ value: String(y), label: String(y) }))]}
-            onChange={(v) => setYear(v as string)}
-          />
+      <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#94B3FD" }}>
+        <div className="flex items-center gap-2">
+          <label className="text-sm">Rok</label>
+          <div className="w-40">
+            <Dropdown
+              value={year}
+              options={[{ value: '', label: 'Wszystkie' }, ...years.map(y => ({ value: String(y), label: String(y) }))]}
+              onChange={(v) => setYear(v as string)}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Typ / Kategoria / Daty / Wyczyść */}
-      <div className="flex flex-wrap items-center justify-center gap-2 bg-white p-2 rounded-md">
         <div className="flex items-center gap-2">
           <label className="text-sm">Typ</label>
           <div className="w-40">
@@ -143,7 +141,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
               setStart('');
               setEnd('');
             }}
-            style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+            style={{ backgroundColor: "#ffffff", color: "#000000" }}
           >
           Wyczyść
             </Button>
@@ -179,13 +177,13 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="text-center">
-        <h3 className="font-medium mb-2">Rozkład wydatków wg kategorii</h3>
+      <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
+        <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Rozkład wydatków wg kategorii</h3>
           <CategoryBreakdown transactions={filteredTx} />
       </div>
 
-      <div className="text-center">
-        <h3 className="font-medium mb-2">Przychody i wydatki</h3>
+      <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
+        <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Przychody i wydatki</h3>
           <YearlyChart transactions={filteredTx} year={year ? Number(year) : undefined} />
       </div>
     </div>

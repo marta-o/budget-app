@@ -16,22 +16,34 @@ interface DeleteTransactionDialogProps {
 }
 
 export function DeleteTransactionDialog({ open, onOpenChange, onConfirm }: DeleteTransactionDialogProps) {
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm bg-white text-gray-900">
-        <DialogHeader>
-          <DialogTitle>Usuń transakcję</DialogTitle>
-          <DialogDescription>Na pewno chcesz usunąć tę transakcję? Operacji nie będzie można cofnąć.</DialogDescription>
+      <DialogContent className="max-w-md sm:max-w-lg rounded-xl shadow-2xl p-0 bg-white/40 backdrop-blur-2xl border border-white/30 text-gray-900">
+        <DialogHeader className="text-center pb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl text-white">
+          <DialogTitle className="text-xl font-semibold tracking-tight text-white">
+            Usuń transakcję
+          </DialogTitle>
+          <DialogDescription className="text-sm opacity-90 text-white">
+            Na pewno chcesz usunąć tę transakcję? <br /> Operacji nie będzie można cofnąć. 
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="px-5 pb-5 pt-4 flex justify-end gap-2">
           <DialogClose asChild>
-            <Button variant="ghost" type="button">Anuluj</Button>
+            <Button
+              variant="ghost"
+              type="button"
+              className="!bg-[#94DAFF] !text-black"
+              style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+            >
+              Anuluj
+            </Button>
           </DialogClose>
           <Button
             variant="destructive"
             type="button"
+            className="!bg-white !text-black"
+            style={{ backgroundColor: "#ffffff", color: "#000000" }}
             onClick={() => {
               onConfirm();
               onOpenChange(false);

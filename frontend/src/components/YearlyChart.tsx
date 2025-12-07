@@ -37,13 +37,13 @@ export function YearlyChart({ transactions, year }: YearlyChartProps) {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#64748b" />
-              <YAxis tick={{ fontSize: 12 }} stroke="#64748b" />
-              <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-              <Legend />
-              <Bar dataKey="income" fill="#10b981" name="Przychody" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expenses" fill="#ef4444" name="Wydatki" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#5b21b6" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#5b21b6" />
+              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e6e0ff', borderRadius: '8px' }} />
+              <Legend wrapperStyle={{ paddingTop: 8 }} />
+              <Bar dataKey="income" fill="#B983FF" name="Przychody" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="expenses" fill="#7C3AED" name="Wydatki" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -65,8 +65,8 @@ export function YearlyChart({ transactions, year }: YearlyChartProps) {
 
   const chartData = monthNames.map((name, index) => ({
     month: name,
-    income: +( (monthlyTotals[index]?.income || 0) / yearsCount ).toFixed(2),
-    expenses: +( (monthlyTotals[index]?.expenses || 0) / yearsCount ).toFixed(2),
+    income: +(((monthlyTotals[index]?.income || 0) / yearsCount).toFixed(2)),
+    expenses: +(((monthlyTotals[index]?.expenses || 0) / yearsCount).toFixed(2)),
   }));
 
   return (
@@ -78,13 +78,14 @@ export function YearlyChart({ transactions, year }: YearlyChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#64748b" />
-            <YAxis tick={{ fontSize: 12 }} stroke="#64748b" />
-            <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-            <Legend />
-            <Bar dataKey="income" fill="#10b981" name="Średnie przychody" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expenses" fill="#ef4444" name="Średnie wydatki" radius={[4, 4, 0, 0]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#5b21b6" />
+            <YAxis tick={{ fontSize: 12 }} stroke="#5b21b6" />
+            <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e6e0ff', borderRadius: '8px' }} />
+            <Legend wrapperStyle={{ paddingTop: 8 }} />
+            {/* blue and purple for the average view */}
+            <Bar dataKey="income" fill="#94B3FD" name="Średnie przychody" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="expenses" fill="#B983FF" name="Średnie wydatki" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

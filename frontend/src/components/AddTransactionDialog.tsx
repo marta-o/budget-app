@@ -55,7 +55,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
       <Button
         className="gap-2"
         onClick={() => setIsOpen(true)}
-        style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+        style={{ backgroundColor: "#94B3FD", color: "#000000" }}
       >
         <Plus className="w-4 h-4" />
         Dodaj Transakcję
