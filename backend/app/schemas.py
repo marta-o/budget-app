@@ -25,7 +25,7 @@ class UserCreate(BaseModel):
     first_name: str
     last_name: str
     age: int | None = None
-    household_status: str | None = None
+    gender: str | None = None
 
 class UserOut(BaseModel):
     id: int

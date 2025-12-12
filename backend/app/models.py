@@ -16,7 +16,7 @@ class Person(Base):
     Table name: people
     Columns:
       - id: PK
-      - first_name, last_name, age, household_status: basic profile fields
+      - first_name, last_name, age, gender: basic profile fields
     Relationships:
       - user: one-to-one to User (login) via person_id
       - transactions: one-to-many to Transaction
@@ -27,7 +27,7 @@ class Person(Base):
     first_name = Column(String)
     last_name = Column(String)
     age = Column(Integer)
-    household_status = Column("houshold_status", String)
+    gender = Column(String, nullable=True)
 
     logins = relationship("User", back_populates="person")
     transactions = relationship("Transaction", back_populates="person")

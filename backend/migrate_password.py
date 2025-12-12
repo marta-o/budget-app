@@ -21,7 +21,7 @@ def migrate():
     
     db.commit()
     db.close()
-    print(f"✅ Zmigrowano {count} haseł")
+    print(f"Zmigrowano {count} haseł")
 
 if __name__ == "__main__":
     migrate()

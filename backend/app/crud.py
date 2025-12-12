@@ -43,10 +43,11 @@ def create_user(db: Session, user: schemas.UserCreate):
         first_name=user.first_name,
         last_name=user.last_name,
         age=user.age,
-        household_status=user.household_status,
+        gender=user.gender,
     )
     db.add(db_person)
-    db.flush()
+    db.commit()
+    db.refresh(db_person)
     
     hashed_pw = get_password_hash(user.password)
     db_user = models.User(
