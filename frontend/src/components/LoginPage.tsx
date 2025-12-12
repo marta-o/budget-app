@@ -23,10 +23,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [age, setAge] = useState<number | ''>('');
-  const [householdStatus, setHouseholdStatus] = useState('');
+  const [gender, setGender] = useState('');
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
-  const [regSuccess, setRegSuccess] = useState<string | null>(null);
+  const [loginSuccess, setLoginSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +40,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         setError('Nieprawidłowe dane logowania');
       }
     } catch (err: any) {
-      setError(err?.message || 'Błąd sieciowy');
+      const errorMessage = err?.message || 'Błąd sieciowy';
+      if (errorMessage.includes('Invalid credentials')) {
+        setError('Nieprawidłowe dane logowania');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -49,7 +54,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError(null);
-    setRegSuccess(null);
 
     if (!regUsername || !regPassword || !regConfirm || !firstName || !lastName) {
       setRegError('Wypełnij wymagane pola');
@@ -59,7 +63,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       setRegError('Hasła nie są identyczne');
       return;
     }
-
+    
     setRegLoading(true);
     try {
       const payload = {
@@ -68,12 +72,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         first_name: firstName,
         last_name: lastName,
         age: age === '' ? null : Number(age),
-        household_status: householdStatus || null,
+        gender: gender || null,
       };
+      console.log('register payload:', payload);
 
       await register(payload);
 
-      setRegSuccess('Konto utworzone pomyślnie. Możesz się teraz zalogować.');
+      setLoginSuccess('Konto utworzone pomyślnie. Możesz się teraz zalogować.');
       setShowRegister(false);
       setRegUsername('');
       setRegPassword('');
@@ -81,9 +86,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       setFirstName('');
       setLastName('');
       setAge('');
-      setHouseholdStatus('');
+      setGender('');
     } catch (err: any) {
-      setRegError(err?.message || 'Błąd podczas rejestracji');
+      const errorMessage = err?.message || 'Błąd podczas rejestracji';
+      if (errorMessage.includes('user already exists')) {
+        setRegError('Użytkownik o tej nazwie już istnieje');
+      } else {
+        setRegError(errorMessage);
+      }
     } finally {
       setRegLoading(false);
     }
@@ -127,6 +137,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     required
                   />
                 </div>
+                {loginSuccess && (
+                  <div className="p-3 bg-green-100 border border-green-400 rounded text-green-700 text-sm">
+                    {loginSuccess}
+                  </div>
+                )}
                 {error && <p className="text-sm text-red-600">{error}</p>}
                 <Button type="submit" className="w-full gap-2" style={{ backgroundColor: "#94DAFF", color: "#000000" }} disabled={loading}>
                   <LogIn className="w-4 h-4" />
@@ -140,7 +155,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   onClick={() => {
                     setShowRegister(true);
                     setRegError(null);
-                    setRegSuccess(null);
+                    setLoginSuccess(null);
                   }}
                 >
                   <UserPlus className="w-4 h-4" />
@@ -158,7 +173,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <div>
                 <CardTitle className="text-xl">Rejestracja</CardTitle>
                 <CardDescription>
-                  Utwórz nowe konto (pola wymagane przez backend)
+                  Utwórz nowe konto
                 </CardDescription>
               </div>
             </CardHeader>
@@ -174,17 +189,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     onChange={(e) => setRegUsername(e.target.value)}
                     required
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="first-name">Imię</Label>
-                    <Input id="first-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last-name">Nazwisko</Label>
-                    <Input id="last-name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -214,23 +218,32 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
+                    <Label htmlFor="first-name">Imię</Label>
+                    <Input id="first-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="last-name">Nazwisko</Label>
+                    <Input id="last-name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
                     <Label htmlFor="age">Wiek</Label>
                     <Input id="age" type="number" min={0} value={age === '' ? '' : String(age)} onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="household">Status gospodarstwa</Label>
-                    <select id="household" value={householdStatus} onChange={(e) => setHouseholdStatus(e.target.value)} className="w-full border px-3 py-2 rounded">
-                      <option value="">Wybierz</option>
-                      <option value="single">Samotny/a</option>
-                      <option value="couple">Para</option>
-                      <option value="family">Rodzina</option>
-                      <option value="other">Inne</option>
+                    <Label htmlFor="gender">Płeć</Label>
+                    <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+                      <option value="">Nie chcę podawać</option>
+                      <option value="K">Kobieta</option>
+                      <option value="M">Mężczyzna</option>
                     </select>
-                  </div>
+                  </div> 
                 </div>
 
                 {regError && <p className="text-sm text-red-600">{regError}</p>}
-                {regSuccess && <p className="text-sm text-green-600">{regSuccess}</p>}
+                {loginSuccess && <p className="text-sm text-green-600">{loginSuccess}</p>}
 
                 <div className="flex gap-2">
                   <Button type="submit" className="flex-1 gap-2" style={{ backgroundColor: "#94DAFF", color: "#000000" }} disabled={regLoading}>

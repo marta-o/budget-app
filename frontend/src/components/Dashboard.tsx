@@ -5,11 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { TransactionList } from './TransactionList';
 import { Analytics } from './Analytics';
-// import { SpendingChart } from './SpendingChart';
-// import { CategoryBreakdown } from './CategoryBreakdown';
-// import { YearlyChart } from './YearlyChart';
-// import { PlanningPage } from './PlanningPage';
-// import { NewsPage } from './NewsPage';
+import { Planning } from './Planning';
 import { Transaction, Category } from '../App';
 
 interface DashboardProps {
@@ -24,27 +20,23 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Filters 
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
-  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
+  const [filterCategoryId, setFilterCategoryId] = useState<string[]>([]);
   const [filterStart, setFilterStart] = useState<string>('');
   const [filterEnd, setFilterEnd] = useState<string>('');
   const [q, setQ] = useState<string>('');
 
-  // visible categories depend on selected filterType
   const visibleCategories = useMemo(() => {
     if (filterType === 'all') return categories;
     return categories.filter(c => c.type === filterType);
   }, [categories, filterType]);
 
-  // If selected category doesn't belong to the chosen type, reset to empty
   useEffect(() => {
-    if (filterCategoryId === '') return;
-    const exists = visibleCategories.some(c => String(c.id) === filterCategoryId);
-    if (!exists) setFilterCategoryId('');
+    if (filterCategoryId.length === 0) return;
+    const valid = filterCategoryId.filter(id => visibleCategories.some(c => String(c.id) === id));
+    if (valid.length !== filterCategoryId.length) setFilterCategoryId(valid);
   }, [filterType, visibleCategories, filterCategoryId]);
 
-  // Fetch transactions from server whenever token or filters change.
   useEffect(() => {
     let mounted = true;
     const fetchTx = async () => {
@@ -52,7 +44,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
       try {
         const filters: Record<string, string | number> = {};
         if (filterType && filterType !== 'all') filters.tx_type = filterType;
-        if (filterCategoryId) filters.category_id = filterCategoryId;
+        if (filterCategoryId.length > 0) filters.category_id = filterCategoryId.join(',');
         if (filterStart) filters.start = filterStart;
         if (filterEnd) filters.end = filterEnd;
         if (q) filters.q = q;
@@ -67,7 +59,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 
     const id = setTimeout(() => {
       if (token) fetchTx();
-    }, 250); // debounce for quick filter changes
+    }, 250);
 
     return () => { mounted = false; clearTimeout(id); };
   }, [token, filterType, filterCategoryId, filterStart, filterEnd, q]);
@@ -189,7 +181,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         onValueChange={(v) => {
           if (v !== "transactions") {
             setFilterType("all");
-            setFilterCategoryId("");
+            setFilterCategoryId([]);
             setFilterStart("");
             setFilterEnd("");
             setQ("");
@@ -231,7 +223,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
             }}
             onClearFilters={() => {
               setFilterType('all');
-              setFilterCategoryId('');
+              setFilterCategoryId([]);
               setFilterStart('');
               setFilterEnd('');
               setQ('');
@@ -245,7 +237,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </TabsContent>
 
         <TabsContent value="planning" className="space-y-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm">Planowanie — jeszcze w budowie</div>
+          <Planning transactions={transactions} categories={categories} token={token} />
         </TabsContent>
 
         <TabsContent value="news" className="space-y-4">

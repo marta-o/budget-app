@@ -12,11 +12,10 @@ import { FilterTransactionDialog } from './FilterTransactionDialog';
 
 interface FilterVals {
   type: 'all' | 'income' | 'expense';
-  categoryId: string;
+  categoryId: string[];
   start: string;
   end: string;
 }
-
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -95,16 +94,16 @@ export function TransactionList({
     setToDelete(null);
   };
 
-  const applyFilterChange = (partial: Partial<FilterVals>) => {
-    const next = { ...currentFilters, ...partial } as FilterVals;
-    if (partial.type && partial.type !== 'all') {
-      const exists = categories.some(c => String(c.id) === String(next.categoryId) && c.type === partial.type);
-      if (!exists) next.categoryId = '';
-    } else if (partial.type === 'all') {
-      next.categoryId = '';
-    }
-    onApplyFilters(next);
-  };
+  // const applyFilterChange = (partial: Partial<FilterVals>) => {
+  //   const next = { ...currentFilters, ...partial } as FilterVals;
+  //   if (partial.type && partial.type !== 'all') {
+  //     const exists = categories.some(c => String(c.id) === String(next.categoryId) && c.type === partial.type);
+  //     if (!exists) next.categoryId = '';
+  //   } else if (partial.type === 'all') {
+  //     next.categoryId = '';
+  //   }
+  //   onApplyFilters(next);
+  // };
 
   return (
     <>
@@ -159,47 +158,68 @@ export function TransactionList({
       </div>
 
       {effectiveShowFilters && (
-        <div ref={filtersRef} id="filters-block" className="mb-4 flex items-center gap-2 bg-white p-2 rounded-md">
-          <label className="flex items-center gap-2">
-            <span className="text-sm">Typ</span>
-            <div className="w-40">
-              <Dropdown
-                value={currentFilters.type}
-                options={[{ value: 'all', label: 'Wszystkie' }, { value: 'expense', label: 'Wydatek' }, { value: 'income', label: 'Przychód' }]}
-                onChange={(v) => applyFilterChange({ type: v as FilterVals['type'] })}
+        <div ref={filtersRef} id="filters-block" className="mb-4 flex flex-col items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#94B3FD" }}>
+            <div className="flex items-center gap-2">
+              <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
+              <div className="w-40">
+                <Dropdown
+                  value={currentFilters.type}
+                  options={[
+                    { value: 'all', label: 'Wszystkie' },
+                    { value: 'expense', label: 'Wydatek' },
+                    { value: 'income', label: 'Przychód' }
+                  ]}
+                  onChange={(v) => {
+                    const newType = v as FilterVals['type'];
+                    onApplyFilters({ ...currentFilters, type: newType, categoryId: [] });
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm" style={{ fontWeight: 700 }}>Kategoria</label>
+              <div className="w-48">
+                <Dropdown
+                  multi
+                  value={currentFilters.categoryId}
+                  options={visibleCategories.map(c => ({ value: String(c.id), label: c.name }))}
+                  onChange={(v) => onApplyFilters({ ...currentFilters, categoryId: Array.isArray(v) ? v : [] })}
+                  placeholder="Wszystkie"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
+              <input
+                type="date"
+                className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+                value={currentFilters.start}
+                onChange={e => onApplyFilters({ ...currentFilters, start: e.target.value })}
               />
             </div>
-          </label>
 
-          <label className="flex items-center gap-2">
-            <span className="text-sm">Kategoria</span>
-            <div className="w-48">
-              <Dropdown
-                value={currentFilters.categoryId}
-                options={[{ value: '', label: 'Wszystkie' }, ...visibleCategories.map(c => ({ value: String(c.id), label: c.name }))]}
-                onChange={(v) => applyFilterChange({ categoryId: v as string })}
+            <div className="flex items-center gap-2">
+              <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
+              <input
+                type="date"
+                className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+                value={currentFilters.end}
+                onChange={e => onApplyFilters({ ...currentFilters, end: e.target.value })}
               />
             </div>
-          </label>
 
-          <label className="flex items-center gap-2">
-            <span className="text-sm">Od</span>
-            <input
-              type="date"
-              className="border border-slate-300 px-2 py-1 rounded-md bg-white"
-              value={currentFilters.start}
-              onChange={(e) => applyFilterChange({ start: e.target.value })}
-            />
-            <span className="text-sm">Do</span>
-            <input
-              type="date"
-              className="border border-slate-300 px-2 py-1 rounded-md bg-white"
-              value={currentFilters.end}
-              onChange={(e) => applyFilterChange({ end: e.target.value })}
-            />
-          </label>
-
-          <Button variant="ghost" onClick={onClearFilters}>Wyczyść</Button>
+            <div>
+              <Button
+                onClick={onClearFilters}
+                style={{ backgroundColor: "#ffffff", color: "#000000" }}
+              >
+                Wyczyść
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 

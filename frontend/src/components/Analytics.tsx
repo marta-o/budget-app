@@ -13,6 +13,12 @@ interface AnalyticsProps {
 }
 
 export function Analytics({ transactions, categories, token }: AnalyticsProps) {
+  const [year, setYear] = useState<string>(String(new Date().getFullYear()));
+  const [type, setType] = useState<'all'|'income'|'expense'>('all');
+  const [categoryId, setCategoryId] = useState<string[]>([]);
+  const [start, setStart] = useState<string>('');
+  const [end, setEnd] = useState<string>('');
+  
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
   useEffect(() => {
     let mounted = true;
@@ -37,12 +43,6 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
     if (arr.length === 0) arr.push(new Date().getFullYear());
     return arr;
   }, [sourceTransactions]);
-
-  const [year, setYear] = useState<string>(""); // "" = wszystkie
-  const [type, setType] = useState<'all'|'income'|'expense'>('all');
-  const [categoryId, setCategoryId] = useState<string[]>([]);
-  const [start, setStart] = useState<string>('');
-  const [end, setEnd] = useState<string>('');
 
   const visibleCategories = type === 'all' ? categories : categories.filter(c => c.type === type);
 
@@ -74,7 +74,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
     <div className="flex flex-col items-center gap-4">
       <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#94B3FD" }}>
         <div className="flex items-center gap-2">
-          <label className="text-sm">Rok</label>
+          <label className="text-sm" style={{ fontWeight: 700 }}>Rok</label>
           <div className="w-40">
             <Dropdown
               value={year}
@@ -85,7 +85,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm">Typ</label>
+          <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
           <div className="w-40">
             <Dropdown
               value={type}
@@ -100,7 +100,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm">Kategoria</label>
+          <label className="text-sm" style={{ fontWeight: 700 }}>Kategoria</label>
           <div className="w-48">
             <Dropdown
               multi
@@ -113,7 +113,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm">Od</label>
+          <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
           <input
             type="date"
             value={start}
@@ -123,7 +123,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm">Do</label>
+          <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
           <input
             type="date"
             value={end}
