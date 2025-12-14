@@ -12,8 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 ENV_PATH = str(PROJECT_ROOT / ".env")
 
 class Settings(BaseSettings):
-    SQLALCHEMY_DATABASE_URL: str
-    SECRET_KEY: str
+    # Provide sensible defaults for local development so the app still starts
+    # when a .env is missing or not being picked up for any reason.
+    SQLALCHEMY_DATABASE_URL: str = f"sqlite:///{PROJECT_ROOT / 'MoneyManagement.db'}"
+    SECRET_KEY: str = "change_this_in_production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 12
 

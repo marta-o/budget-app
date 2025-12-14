@@ -4,9 +4,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from app.database import SessionLocal
 from app.models import User
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 def migrate():
     db = SessionLocal()
@@ -16,7 +14,10 @@ def migrate():
         # Sprawdź czy hasło już jest hashowane (bcrypt zaczyna się od $2b$)
         if user.password and not user.password.startswith("$2"):
             print(f"Hashing password for user: {user.username}")
-            user.password = pwd_context.hash(user.password)
+            # Bcrypt akceptuje max 72 bajty - obcinamy jeśli dłuższe
+            pwd_bytes = user.password.encode('utf-8')[:72]
+            hashed = bcrypt.hashpw(pwd_bytes, bcrypt.gensalt())
+            user.password = hashed.decode('utf-8')
             count += 1
     
     db.commit()
