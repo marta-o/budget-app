@@ -1,14 +1,11 @@
 """
-auth.py router
-- Provides /auth endpoints for registration and login.
-- Uses crud functions to access DB.
-- Returns a simple access_token (dummy-token) currently; replace with real JWT if needed.
+Auth router - handles user registration, login, and authentication.
+Uses JWT tokens for session management.
 """
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .. import schemas, crud, models
 from ..database import get_db
 from ..config import settings
@@ -16,34 +13,22 @@ from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-def create_access_token(subject: str, expires_minutes: int | None = None):
-    expire = datetime.utcnow() + timedelta(minutes=(expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+def create_access_token(subject: str, expires_minutes: int | None = None) -> str:
+    """Generate a JWT token with the username as subject and expiration time."""
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = {"sub": subject, "exp": expire}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 @router.post("/register", response_model=schemas.UserOut, status_code=201)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    """
-    Register a new user.
-    - Checks if username already exists.
-    - Calls crud.create_user to persist user in DB.
-    - Returns created user object (as-is).
-    """
-    existing = crud.get_user_by_username(db, user.username)
-    if existing:
+    """Register a new user. Returns 400 if username already exists."""
+    if crud.get_user_by_username(db, user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
-    created = crud.create_user(db, user)
-    return created
+    return crud.create_user(db, user)
 
 @router.post("/login")
 def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
-    """
-    Login endpoint.
-    - Expects JSON body matching schemas.UserCreate (username, password).
-    - Verifies username exists and password matches via crud.verify_password.
-    - On success returns a JSON containing access_token.
-    - On failure raises HTTPException(401).
-    """
+    """Authenticate user and return JWT token. Returns 401 if credentials are invalid."""
     db_user = crud.get_user_by_username(db, credentials.username)
     if not db_user or not crud.verify_password(credentials.password, db_user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -52,4 +37,5 @@ def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=schemas.UserOut)
 def me(user: models.User = Depends(get_current_user)):
+    """Return currently authenticated user's information."""
     return user

@@ -3,6 +3,5 @@ uvicorn
 sqlalchemy
 pydantic
 pydantic-settings
-passlib[bcrypt]
 python-jose[cryptography]
 bcrypt<5.0

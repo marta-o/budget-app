@@ -1,4 +1,21 @@
-const API_URL =  "http://127.0.0.1:8000";
+/**
+ * API client for communicating with the FastAPI backend.
+ * All functions handle authentication via Bearer token.
+ */
+
+const API_URL = "http://127.0.0.1:8000";
+
+/** Handle API response - throws error with detail message if not OK */
+async function handleRes(res: Response) {
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || body.message || res.statusText);
+  }
+  return res.json().catch(() => ({}));
+}
+
+
+// Auth endpoints
 
 export async function login(username: string, password: string) {
   const res = await fetch(`${API_URL}/auth/login`, {
@@ -10,12 +27,13 @@ export async function login(username: string, password: string) {
   return res.json();
 }
 
-async function handleRes(res: Response) {
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || body.message || res.statusText);
-  }
-  return res.json().catch(() => ({}));
+export async function register(payload: Record<string, unknown>) {
+  const res = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return handleRes(res);
 }
 
 export async function getProfile(token: string) {
@@ -25,33 +43,54 @@ export async function getProfile(token: string) {
   return handleRes(res);
 }
 
-export async function getTransactions(token: string, filters?: Record<string, string | number | undefined>) {
+
+// Transaction endpoints
+
+export async function getTransactions(
+  token: string,
+  filters?: Record<string, string | number | undefined>
+) {
   const params = new URLSearchParams();
   if (filters) {
     Object.entries(filters).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && String(v) !== '') params.append(k, String(v));
+      if (v !== undefined && v !== null && String(v) !== "") {
+        params.append(k, String(v));
+      }
     });
   }
-  const url = `${API_URL}/transactions/` + (params.toString() ? `?${params.toString()}` : '');
+  const url = `${API_URL}/transactions/${params.toString() ? `?${params}` : ""}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return handleRes(res);
 }
 
-export async function addTransaction(token: string, tx: { title: string; amount: number; category_id?: number; type?: string; date?: string }) {
+export async function addTransaction(
+  token: string,
+  tx: { title: string; amount: number; category_id?: number; date?: string }
+) {
   const res = await fetch(`${API_URL}/transactions/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(tx),
   });
   return handleRes(res);
 }
 
-export async function updateTransaction(token: string, id: string | number, tx: Partial<{ title: string; amount: number; category_id?: number; type?: string; date?: string }>) {
+export async function updateTransaction(
+  token: string,
+  id: string | number,
+  tx: Partial<{ title: string; amount: number; category_id?: number; date?: string }>
+) {
   const res = await fetch(`${API_URL}/transactions/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(tx),
   });
   return handleRes(res);
@@ -65,19 +104,12 @@ export async function deleteTransaction(token: string, id: string | number) {
   return handleRes(res);
 }
 
-export async function getCategories(token?: string, type?: string) {
-  const q = type ? `?type=${encodeURIComponent(type)}` : "";
-  const headers: any = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${API_URL}/categories/${q}`, { headers });
-  return handleRes(res);
-}
 
-export async function register(payload: Record<string, any>) {
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+// Category endpoints
+
+export async function getCategories(token?: string, type?: string) {
+  const query = type ? `?type=${encodeURIComponent(type)}` : "";
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(`${API_URL}/categories/${query}`, { headers });
   return handleRes(res);
 }

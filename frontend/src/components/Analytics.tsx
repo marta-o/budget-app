@@ -1,10 +1,15 @@
+/**
+ * Analytics - Dashboard component for viewing financial analytics.
+ * Displays filtered transactions with charts and category breakdowns.
+ * Transaction type is derived from category, not stored in transaction.
+ */
 import { useMemo, useState, useEffect } from "react";
-import { Transaction, Category } from "../App";
-import { getTransactions } from '../api';
+import { Transaction, Category, getTransactionType } from "../App";
+import { getTransactions } from "../api";
 import { CategoryBreakdown } from "./CategoryBreakdown";
 import { YearlyChart } from "./YearlyChart";
-import { Dropdown } from './ui/dropdown';
-import { Button } from './ui/button';
+import { Dropdown } from "./ui/dropdown";
+import { Button } from "./ui/button";
 
 interface AnalyticsProps {
   transactions: Transaction[];
@@ -13,13 +18,16 @@ interface AnalyticsProps {
 }
 
 export function Analytics({ transactions, categories, token }: AnalyticsProps) {
+  // Filter state
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
-  const [type, setType] = useState<'all'|'income'|'expense'>('all');
+  const [type, setType] = useState<"all" | "income" | "expense">("all");
   const [categoryId, setCategoryId] = useState<string[]>([]);
-  const [start, setStart] = useState<string>('');
-  const [end, setEnd] = useState<string>('');
-  
+  const [start, setStart] = useState<string>("");
+  const [end, setEnd] = useState<string>("");
+
+  // Fetch all transactions for analytics (not just current month)
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
+
   useEffect(() => {
     let mounted = true;
     if (!token) return;
@@ -31,43 +39,58 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         if (mounted) setAllTransactions([]);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [token]);
 
+  // Use fetched transactions if available, otherwise use props
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
 
+  // Extract unique years from transactions for year filter dropdown
   const years = useMemo(() => {
     const set = new Set<number>();
-    sourceTransactions.forEach(t => set.add(new Date(t.date).getFullYear()));
+    sourceTransactions.forEach((t) => set.add(new Date(t.date).getFullYear()));
     const arr = Array.from(set).sort((a, b) => b - a);
     if (arr.length === 0) arr.push(new Date().getFullYear());
     return arr;
   }, [sourceTransactions]);
 
-  const visibleCategories = type === 'all' ? categories : categories.filter(c => c.type === type);
+  // Filter categories based on type filter
+  const visibleCategories = type === "all" ? categories : categories.filter((c) => c.type === type);
 
+  // Reset category selection when type filter changes
   useEffect(() => {
     if (categoryId.length === 0) return;
-    const valid = categoryId.filter(id => visibleCategories.some(c => String(c.id) === id));
+    const valid = categoryId.filter((id) => visibleCategories.some((c) => String(c.id) === id));
     if (valid.length !== categoryId.length) setCategoryId(valid);
   }, [type, categories]);
 
+  // Filter transactions based on all selected filters.
   const filteredTx = useMemo(() => {
     const s = start ? new Date(start) : null;
     const e = end ? new Date(end) : null;
-    return sourceTransactions.filter(t => {
-      if (type !== 'all' && t.type !== type) return false;
-      if (categoryId.length > 0 && !categoryId.includes(String(t.category_id ?? ''))) return false;
+    return sourceTransactions.filter((t) => {
+      if (type !== "all") {
+        const txType = getTransactionType(t, categories);
+        if (txType !== type) return false;
+      }
+      if (categoryId.length > 0 && !categoryId.includes(String(t.category_id ?? ""))) return false;
       const d = new Date(t.date);
       if (s && d < s) return false;
       if (e && d > e) return false;
       if (year && String(d.getFullYear()) !== year) return false;
       return true;
     });
-  }, [sourceTransactions, type, categoryId, start, end, year]);
+  }, [sourceTransactions, type, categoryId, start, end, year, categories]);
 
-  const totalIncome = filteredTx.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-  const totalExpense = filteredTx.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  // Calculate totals using category-derived type
+  const totalIncome = filteredTx
+    .filter((t) => getTransactionType(t, categories) === "income")
+    .reduce((s, t) => s + t.amount, 0);
+  const totalExpense = filteredTx
+    .filter((t) => getTransactionType(t, categories) === "expense")
+    .reduce((s, t) => s + t.amount, 0);
 
   return (
   <div className="space-y-4">
@@ -179,12 +202,12 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
         <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Rozkład wydatków wg kategorii</h3>
-          <CategoryBreakdown transactions={filteredTx} />
+          <CategoryBreakdown transactions={filteredTx} categories={categories} />
       </div>
 
       <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
         <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Przychody i wydatki</h3>
-          <YearlyChart transactions={filteredTx} year={year ? Number(year) : undefined} />
+          <YearlyChart transactions={filteredTx} categories={categories} year={year ? Number(year) : undefined} />
       </div>
     </div>
   </div>

@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from './ui/button';
+/**
+ * AddTransactionDialog - Modal dialog for creating new transactions.
+ */
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,43 +12,51 @@ import {
   DialogDescription,
   DialogClose,
 } from "./ui/dialog";
-import { Transaction, Category } from '../App';
+import { Transaction, Category } from "../App";
 
 interface AddTransactionDialogProps {
-  onAdd: (transaction: Omit<Transaction, 'id'>) => void;
+  onAdd: (transaction: Omit<Transaction, "id">) => void;
   categories?: Category[];
 }
 
 export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [categoryId, setCategoryId] = useState<number | ''>('');
+
+  // Form fields
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [type, setType] = useState<"income" | "expense">("expense");
+  const [categoryId, setCategoryId] = useState<number | "">("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const visibleCategories = categories.filter(c => c.type === type);
+  // Filter categories based on selected type (income or expense)
+  const visibleCategories = categories.filter((c) => c.type === type);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) {
-      alert('Podaj kwotę.');
+      alert("Podaj kwotę.");
       return;
     }
-    const payload: Omit<Transaction, 'id'> = {
+
+    // Find selected category to get its type
+    const selectedCategory = categories.find((c) => c.id === Number(categoryId));
+
+    const payload: Omit<Transaction, "id"> = {
       title,
       amount: Number(amount),
-      type,
-      category_id: categoryId === '' ? null : Number(categoryId),
-      category: categories.find(c => c.id === Number(categoryId))?.name ?? '',
+      category_id: categoryId === "" ? null : Number(categoryId),
+      category: selectedCategory?.name ?? "",
+      category_type: selectedCategory?.type ?? "expense",
       date,
     };
     onAdd(payload);
 
-    setTitle('');
-    setAmount('');
-    setCategoryId('');
-    setType('expense');
+    // Reset form to initial state
+    setTitle("");
+    setAmount("");
+    setCategoryId("");
+    setType("expense");
     setDate(new Date().toISOString().split("T")[0]);
     setIsOpen(false);
   };
@@ -148,6 +159,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
+              
               <DialogClose asChild>
                 <Button
                   variant="outline"

@@ -1,33 +1,43 @@
-import { useState } from 'react';
-import { Wallet, LogIn, UserPlus, X } from 'lucide-react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { login, register } from '../api';
+/**
+ * LoginPage - Authentication page with login and registration forms.
+ * Handles user login and new account registration.
+ */
+import { useState } from "react";
+import { Wallet, LogIn, UserPlus, X } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { login, register } from "../api";
 
 interface LoginPageProps {
   onLogin: (token: string, username: string) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // Login form state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Registration form state
   const [showRegister, setShowRegister] = useState(false);
-  const [regUsername, setRegUsername] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirm, setRegConfirm] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [age, setAge] = useState<number | ''>('');
-  const [gender, setGender] = useState('');
+  const [regUsername, setRegUsername] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirm, setRegConfirm] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [gender, setGender] = useState("");
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
   const [loginSuccess, setLoginSuccess] = useState<string | null>(null);
 
+  /**
+   * Handles login form submission.
+   * Calls API and passes token to parent on success.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -37,12 +47,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       if (res?.access_token) {
         onLogin(res.access_token, username);
       } else {
-        setError('Nieprawidłowe dane logowania');
+        setError("Nieprawidłowe dane logowania");
       }
     } catch (err: any) {
-      const errorMessage = err?.message || 'Błąd sieciowy';
-      if (errorMessage.includes('Invalid credentials')) {
-        setError('Nieprawidłowe dane logowania');
+      const errorMessage = err?.message || "Błąd sieciowy";
+      if (errorMessage.includes("Invalid credentials")) {
+        setError("Nieprawidłowe dane logowania");
       } else {
         setError(errorMessage);
       }
@@ -51,19 +61,24 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
+  /**
+   * Handles registration form submission.
+   * Validates inputs and creates new account via API.
+   */
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError(null);
 
+    // Validate required fields
     if (!regUsername || !regPassword || !regConfirm || !firstName || !lastName) {
-      setRegError('Wypełnij wymagane pola');
+      setRegError("Wypełnij wymagane pola");
       return;
     }
     if (regPassword !== regConfirm) {
-      setRegError('Hasła nie są identyczne');
+      setRegError("Hasła nie są identyczne");
       return;
     }
-    
+
     setRegLoading(true);
     try {
       const payload = {
@@ -71,26 +86,26 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         password: regPassword,
         first_name: firstName,
         last_name: lastName,
-        age: age === '' ? null : Number(age),
+        date_of_birth: dateOfBirth || null,
         gender: gender || null,
       };
-      console.log('register payload:', payload);
 
       await register(payload);
 
-      setLoginSuccess('Konto utworzone pomyślnie. Możesz się teraz zalogować.');
+      // Show success message and reset form
+      setLoginSuccess("Konto utworzone pomyślnie. Możesz się teraz zalogować.");
       setShowRegister(false);
-      setRegUsername('');
-      setRegPassword('');
-      setRegConfirm('');
-      setFirstName('');
-      setLastName('');
-      setAge('');
-      setGender('');
+      setRegUsername("");
+      setRegPassword("");
+      setRegConfirm("");
+      setFirstName("");
+      setLastName("");
+      setDateOfBirth("");
+      setGender("");
     } catch (err: any) {
-      const errorMessage = err?.message || 'Błąd podczas rejestracji';
-      if (errorMessage.includes('user already exists')) {
-        setRegError('Użytkownik o tej nazwie już istnieje');
+      const errorMessage = err?.message || "Błąd podczas rejestracji";
+      if (errorMessage.includes("user already exists")) {
+        setRegError("Użytkownik o tej nazwie już istnieje");
       } else {
         setRegError(errorMessage);
       }
@@ -229,8 +244,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
-                    <Label htmlFor="age">Wiek</Label>
-                    <Input id="age" type="number" min={0} value={age === '' ? '' : String(age)} onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))} />
+                    <Label htmlFor="date-of-birth">Data urodzenia</Label>
+                    <Input id="date-of-birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gender">Płeć</Label>

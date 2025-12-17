@@ -1,26 +1,31 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Transaction } from '../App';
+/**
+ * CategoryBreakdown - Pie chart showing expense distribution by category.
+ */
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Transaction, Category, getTransactionType } from "../App";
 
 interface CategoryBreakdownProps {
   transactions: Transaction[];
+  categories: Category[];
 }
 
+// Color palette for pie chart segments
 const COLORS = [
-  '#A78BFA', //
-  '#ca5cf6ff', 
-  '#60A5FA', 
-  '#B983FF', 
-  '#94B3FD', 
-  '#7C3AED', 
-  '#6cb6d8ff', //
-  '#60eceeff', 
+  "#A78BFA",
+  "#ca5cf6ff",
+  "#60A5FA",
+  "#B983FF",
+  "#94B3FD",
+  "#7C3AED",
+  "#6cb6d8ff",
+  "#60eceeff",
 ];
 
-export function CategoryBreakdown({ transactions }: CategoryBreakdownProps) {
+export function CategoryBreakdown({ transactions, categories }: CategoryBreakdownProps) {
   // Group expenses by category
   const expensesByCategory = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => getTransactionType(t, categories) === "expense")
     .reduce((acc, transaction) => {
       if (!acc[transaction.category]) {
         acc[transaction.category] = 0;
@@ -29,9 +34,10 @@ export function CategoryBreakdown({ transactions }: CategoryBreakdownProps) {
       return acc;
     }, {} as Record<string, number>);
 
+  // Transform data for pie chart
   const chartData = Object.entries(expensesByCategory).map(([name, value]) => ({
     name,
-    value: parseFloat(value.toFixed(2))
+    value: parseFloat(value.toFixed(2)),
   }));
 
   return (

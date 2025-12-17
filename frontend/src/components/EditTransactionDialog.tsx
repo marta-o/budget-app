@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Button } from './ui/button';
+/**
+ * EditTransactionDialog - Modal dialog for editing existing transactions.
+ */
+import { useState, useEffect } from "react";
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,13 +11,13 @@ import {
   DialogDescription,
   DialogClose,
 } from "./ui/dialog";
-import { Transaction, Category } from '../App';
+import { Transaction, Category, getTransactionType } from "../App";
 
 interface EditTransactionDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   transaction: Transaction | null;
-  onUpdate: (id: string, payload: Omit<Transaction, 'id'>) => void;
+  onUpdate: (id: string, payload: Omit<Transaction, "id">) => void;
   categories?: Category[];
 }
 
@@ -25,56 +28,67 @@ export function EditTransactionDialog({
   onUpdate,
   categories = [],
 }: EditTransactionDialogProps) {
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [categoryId, setCategoryId] = useState<number | ''>('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  // Form fields
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [type, setType] = useState<"income" | "expense">("expense");
+  const [categoryId, setCategoryId] = useState<number | "">("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
+  // Filter categories based on selected type filter
   const visibleCategories = categories.filter((c) => c.type === type);
 
+  // Populate form fields when transaction changes.
   useEffect(() => {
     if (!transaction) {
-      setTitle('');
-      setAmount('');
-      setType('expense');
-      setCategoryId('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setTitle("");
+      setAmount("");
+      setType("expense");
+      setCategoryId("");
+      setDate(new Date().toISOString().split("T")[0]);
       return;
     }
-    setTitle(transaction.title ?? '');
-    setAmount(String(transaction.amount ?? ''));
-    setType(transaction.type ?? 'expense');
-    setDate(transaction.date ?? new Date().toISOString().split('T')[0]);
+    setTitle(transaction.title ?? "");
+    setAmount(String(transaction.amount ?? ""));
+    setDate(transaction.date ?? new Date().toISOString().split("T")[0]);
 
+    // Derive type from transaction's category
+    const txType = getTransactionType(transaction, categories);
+    setType(txType);
+
+    // Set category if it matches the derived type
     const txCatId = transaction.category_id;
     if (txCatId != null) {
       const cat = categories.find((c) => c.id === txCatId);
-      if (cat && cat.type === (transaction.type ?? 'expense')) {
+      if (cat && cat.type === txType) {
         setCategoryId(txCatId);
       } else {
-        setCategoryId('');
+        setCategoryId("");
       }
     } else {
-      setCategoryId('');
+      setCategoryId("");
     }
   }, [transaction, categories]);
 
+  // Reset categoryId when type filter changes and current category is no longer in the visible categories list.
   useEffect(() => {
-    if (categoryId !== '' && !visibleCategories.some((c) => c.id === categoryId)) {
-      setCategoryId('');
+    if (categoryId !== "" && !visibleCategories.some((c) => c.id === categoryId)) {
+      setCategoryId("");
     }
   }, [type, categories, categoryId, visibleCategories]);
 
+  // Submit the edited transaction. 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!transaction) return;
-    const payload: Omit<Transaction, 'id'> = {
+
+    const selectedCategory = categories.find((c) => c.id === Number(categoryId));
+    const payload: Omit<Transaction, "id"> = {
       title,
       amount: Number(amount),
-      type,
-      category_id: categoryId === '' ? null : Number(categoryId),
-      category: categories.find((c) => c.id === Number(categoryId))?.name ?? '',
+      category_id: categoryId === "" ? null : Number(categoryId),
+      category: selectedCategory?.name ?? "",
+      category_type: selectedCategory?.type ?? "expense",
       date,
     };
     onUpdate(transaction.id, payload);

@@ -1,8 +1,11 @@
+/**
+ * Planning - Component for budget planning with transaction filtering.
+ */
 import { useMemo, useState, useEffect } from "react";
-import { Transaction, Category } from "../App";
-import { getTransactions } from '../api';
-import { Dropdown } from './ui/dropdown';
-import { Button } from './ui/button';
+import { Transaction, Category, getTransactionType } from "../App";
+import { getTransactions } from "../api";
+import { Dropdown } from "./ui/dropdown";
+import { Button } from "./ui/button";
 
 interface PlanningProps {
   transactions: Transaction[];
@@ -11,13 +14,16 @@ interface PlanningProps {
 }
 
 export function Planning({ transactions, categories, token }: PlanningProps) {
+  // Filter state
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
-  const [type, setType] = useState<'all' | 'income' | 'expense'>('all');
+  const [type, setType] = useState<"all" | "income" | "expense">("all");
   const [categoryId, setCategoryId] = useState<string[]>([]);
-  const [start, setStart] = useState<string>('');
-  const [end, setEnd] = useState<string>('');
+  const [start, setStart] = useState<string>("");
+  const [end, setEnd] = useState<string>("");
 
+  // Fetch all transactions for planning
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
+
   useEffect(() => {
     let mounted = true;
     if (!token) return;
@@ -29,43 +35,58 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
         if (mounted) setAllTransactions([]);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [token]);
 
+  // Use fetched transactions if available
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
 
+  // Extract unique years from transactions for year filter dropdown
   const years = useMemo(() => {
     const set = new Set<number>();
-    sourceTransactions.forEach(t => set.add(new Date(t.date).getFullYear()));
+    sourceTransactions.forEach((t) => set.add(new Date(t.date).getFullYear()));
     const arr = Array.from(set).sort((a, b) => b - a);
     if (arr.length === 0) arr.push(new Date().getFullYear());
     return arr;
   }, [sourceTransactions]);
 
-  const visibleCategories = type === 'all' ? categories : categories.filter(c => c.type === type);
+  // Filter categories based on type filter
+  const visibleCategories = type === "all" ? categories : categories.filter((c) => c.type === type);
 
+  // Reset category selection when type filter changes
   useEffect(() => {
     if (categoryId.length === 0) return;
-    const valid = categoryId.filter(id => visibleCategories.some(c => String(c.id) === id));
+    const valid = categoryId.filter((id) => visibleCategories.some((c) => String(c.id) === id));
     if (valid.length !== categoryId.length) setCategoryId(valid);
   }, [type, categories]);
 
+  // Filter transactions based on all selected filters.
   const filteredTx = useMemo(() => {
     const s = start ? new Date(start) : null;
     const e = end ? new Date(end) : null;
-    return sourceTransactions.filter(t => {
-      if (type !== 'all' && t.type !== type) return false;
-      if (categoryId.length > 0 && !categoryId.includes(String(t.category_id ?? ''))) return false;
+    return sourceTransactions.filter((t) => {
+      if (type !== "all") {
+        const txType = getTransactionType(t, categories);
+        if (txType !== type) return false;
+      }
+      if (categoryId.length > 0 && !categoryId.includes(String(t.category_id ?? ""))) return false;
       const d = new Date(t.date);
       if (s && d < s) return false;
       if (e && d > e) return false;
       if (year && String(d.getFullYear()) !== year) return false;
       return true;
     });
-  }, [sourceTransactions, type, categoryId, start, end, year]);
+  }, [sourceTransactions, type, categoryId, start, end, year, categories]);
 
-  const totalIncome = filteredTx.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-  const totalExpense = filteredTx.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  // Calculate totals using category-derived type
+  const totalIncome = filteredTx
+    .filter((t) => getTransactionType(t, categories) === "income")
+    .reduce((s, t) => s + t.amount, 0);
+  const totalExpense = filteredTx
+    .filter((t) => getTransactionType(t, categories) === "expense")
+    .reduce((s, t) => s + t.amount, 0);
 
   return (
     <div className="space-y-4">
@@ -146,8 +167,6 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
           </div>
         </div>
       </div>
-
-      {/* Tutaj później dodasz zawartość planowania */}
       
     </div>
   );

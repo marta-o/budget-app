@@ -1,4 +1,7 @@
-import React from "react";
+/**
+ * DeleteTransactionDialog - Confirmation dialog for deleting transactions.
+ * Shows a warning message and requires user confirmation before deletion.
+ */
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -24,7 +27,7 @@ export function DeleteTransactionDialog({ open, onOpenChange, onConfirm }: Delet
             Usuń transakcję
           </DialogTitle>
           <DialogDescription className="text-sm opacity-90 text-white">
-            Na pewno chcesz usunąć tę transakcję? <br /> Operacji nie będzie można cofnąć. 
+            Na pewno chcesz usunąć tę transakcję? <br /> Operacji nie będzie można cofnąć.
           </DialogDescription>
         </DialogHeader>
 

@@ -1,12 +1,16 @@
-import { useEffect, useState, useMemo } from 'react';
-import { getTransactions , addTransaction, updateTransaction, deleteTransaction } from '../api';
-import { Wallet, LogOut, Calendar } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Button } from './ui/button';
-import { TransactionList } from './TransactionList';
-import { Analytics } from './Analytics';
-import { Planning } from './Planning';
-import { Transaction, Category } from '../App';
+/**
+ * Dashboard - main view after login.
+ * Displays monthly summary, transactions list, analytics, and planning tabs.
+ */
+import { useEffect, useState, useMemo } from "react";
+import { getTransactions, addTransaction, updateTransaction, deleteTransaction } from "../api";
+import { Wallet, LogOut, Calendar } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Button } from "./ui/button";
+import { TransactionList } from "./TransactionList";
+import { Analytics } from "./Analytics";
+import { Planning } from "./Planning";
+import { Transaction, Category, getTransactionType } from "../App";
 
 interface DashboardProps {
   username: string;
@@ -75,8 +79,13 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
     });
   }, [transactions, currentMonthStart, currentMonthEnd]);
 
-  const totalIncome = currentMonthTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpenses = currentMonthTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  // Calculate totals using category type
+  const totalIncome = currentMonthTransactions
+    .filter(t => getTransactionType(t, categories) === "income")
+    .reduce((s, t) => s + t.amount, 0);
+  const totalExpenses = currentMonthTransactions
+    .filter(t => getTransactionType(t, categories) === "expense")
+    .reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpenses;
 
   const handleAdd = async (tx: Omit<Transaction, 'id'>) => {
@@ -173,7 +182,6 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </div>
       </div>
 
-      {/*space between header and tabs*/}
       <div style={{ marginTop: "2rem" }}>
       <Tabs
         defaultValue="transactions"

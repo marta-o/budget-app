@@ -1,17 +1,15 @@
 """
-main.py
-- FastAPI app factory and global configuration.
-- Registers CORS and includes routers so endpoints like /auth and /transactions are available.
-- Ensure allow_origins contains your frontend origin (e.g. http://127.0.0.1:5173 or http://127.0.0.1:3000).
+FastAPI application entry point.
+Configures CORS middleware and registers all API routers.
 """
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from .routers import auth, transactions, categories
-from .config import settings
 
 app = FastAPI()
 
+# CORS configuration for frontend development servers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -19,8 +17,6 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -30,6 +26,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(categories.router)
+
 
 @app.get("/")
 def root():

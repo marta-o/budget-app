@@ -1,23 +1,33 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Transaction } from '../App';
+/**
+ * YearlyChart - Bar chart displaying monthly income vs expenses.
+ * If year is specified, shows data for that year.
+ * If year is undefined, shows average monthly data across all years.
+ * Transaction type is derived from category.
+ */
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Transaction, Category, getTransactionType } from "../App";
 
 interface YearlyChartProps {
   transactions: Transaction[];
-  year?: number; // if undefined -> average per month across available years
+  categories: Category[];
+  year?: number;
 }
 
-export function YearlyChart({ transactions, year }: YearlyChartProps) {
+export function YearlyChart({ transactions, categories, year }: YearlyChartProps) {
+  // Polish month abbreviations
+  const monthNames = ["Sty", "Lut", "Mar", "Kwi", "Maj", "Cze", "Lip", "Sie", "Wrz", "Paź", "Lis", "Gru"];
 
-  const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'];
-
+  // Chart for a specific year
   if (year) {
     const monthlyData = transactions
-      .filter(t => new Date(t.date).getFullYear() === year)
+      .filter((t) => new Date(t.date).getFullYear() === year)
       .reduce((acc, transaction) => {
         const month = new Date(transaction.date).getMonth();
         if (!acc[month]) acc[month] = { month, income: 0, expenses: 0 };
-        if (transaction.type === 'income') acc[month].income += transaction.amount;
+        // Derive type from category
+        const txType = getTransactionType(transaction, categories);
+        if (txType === "income") acc[month].income += transaction.amount;
         else acc[month].expenses += transaction.amount;
         return acc;
       }, {} as Record<number, { month: number; income: number; expenses: number }>);
@@ -40,7 +50,7 @@ export function YearlyChart({ transactions, year }: YearlyChartProps) {
               <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#5b21b6" />
               <YAxis tick={{ fontSize: 12 }} stroke="#5b21b6" />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e6e0ff', borderRadius: '8px' }} />
+              <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e6e0ff", borderRadius: "8px" }} />
               <Legend wrapperStyle={{ paddingTop: 8 }} />
               <Bar dataKey="income" fill="#B983FF" name="Przychody" radius={[6, 6, 0, 0]} />
               <Bar dataKey="expenses" fill="#7C3AED" name="Wydatki" radius={[6, 6, 0, 0]} />
@@ -51,22 +61,25 @@ export function YearlyChart({ transactions, year }: YearlyChartProps) {
     );
   }
 
+  // Calculate average across all years when no specific year is selected
   const yearsSet = new Set<number>();
-  transactions.forEach(t => yearsSet.add(new Date(t.date).getFullYear()));
+  transactions.forEach((t) => yearsSet.add(new Date(t.date).getFullYear()));
   const yearsCount = yearsSet.size || 1;
 
   const monthlyTotals = transactions.reduce((acc, transaction) => {
     const month = new Date(transaction.date).getMonth();
     if (!acc[month]) acc[month] = { month, income: 0, expenses: 0 };
-    if (transaction.type === 'income') acc[month].income += transaction.amount;
+    // Derive type from category
+    const txType = getTransactionType(transaction, categories);
+    if (txType === "income") acc[month].income += transaction.amount;
     else acc[month].expenses += transaction.amount;
     return acc;
   }, {} as Record<number, { month: number; income: number; expenses: number }>);
 
   const chartData = monthNames.map((name, index) => ({
     month: name,
-    income: +(((monthlyTotals[index]?.income || 0) / yearsCount).toFixed(2)),
-    expenses: +(((monthlyTotals[index]?.expenses || 0) / yearsCount).toFixed(2)),
+    income: +((monthlyTotals[index]?.income || 0) / yearsCount).toFixed(2),
+    expenses: +((monthlyTotals[index]?.expenses || 0) / yearsCount).toFixed(2),
   }));
 
   return (
@@ -81,9 +94,8 @@ export function YearlyChart({ transactions, year }: YearlyChartProps) {
             <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
             <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#5b21b6" />
             <YAxis tick={{ fontSize: 12 }} stroke="#5b21b6" />
-            <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e6e0ff', borderRadius: '8px' }} />
+            <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e6e0ff", borderRadius: "8px" }} />
             <Legend wrapperStyle={{ paddingTop: 8 }} />
-            {/* blue and purple for the average view */}
             <Bar dataKey="income" fill="#94B3FD" name="Średnie przychody" radius={[6, 6, 0, 0]} />
             <Bar dataKey="expenses" fill="#B983FF" name="Średnie wydatki" radius={[6, 6, 0, 0]} />
           </BarChart>

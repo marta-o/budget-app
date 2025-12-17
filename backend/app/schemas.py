@@ -1,70 +1,62 @@
 """
-schemas.py
-- Pydantic models used for request validation and response serialization.
-- Keep these schemas aligned with your ORM models and frontend expectations.
-- Use `orm_mode = True` on response models to allow returning ORM objects directly.
+Pydantic schemas for request validation and response serialization.
 """
-
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional
-from typing import Literal
+
+
+# User Schemas
 
 class UserLogin(BaseModel):
-    """Schema for login - only username and password"""
+    """Login request payload."""
     username: str
     password: str
 
 class UserCreate(BaseModel):
-    """
-    Input schema used for registration and login requests.
-    - Fields should match what frontend sends (e.g. username + password).
-    """
+    """Registration request payload."""
     username: str
     password: str
     first_name: str
     last_name: str
-    age: int | None = None
+    date_of_birth: date | None = None
     gender: str | None = None
 
 class UserOut(BaseModel):
+    """User data returned in API responses."""
     id: int
     username: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-class User(BaseModel):
-    """
-    Response schema for user data returned from API (safe subset).
-    - orm_mode enables returning SQLAlchemy model instances directly.
-    """
-    id: int
-    username: str
-    class Config:
-        orm_mode = True
+
+# Transaction Schemas
 
 class TransactionBase(BaseModel):
+    """Common transaction fields."""
     title: Optional[str] = None
     amount: float
     category_id: Optional[int] = None
     date: date
 
 class TransactionCreate(TransactionBase):
-    """
-    Client uses 'income' | 'expense' values for type.
-    """
-    type: Literal["income", "expense"] = "expense"
+    """Transaction creation/update payload."""
+    pass
 
 class TransactionOut(TransactionBase):
+    """Transaction data returned in API responses."""
     id: int
     person_id: int
-    type: Literal["income", "expense"]
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+# Category Schemas
 
 class CategoryOut(BaseModel):
+    """Category data returned in API responses."""
     id: int
     name: str
     type: str
     class Config:
-        orm_mode = True
+        from_attributes = True

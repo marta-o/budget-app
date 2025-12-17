@@ -1,19 +1,23 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Button } from './ui/button';
+/**
+ * FilterTransactionDialog - Modal dialog for filtering transactions.
+ * Allows filtering by type (income/expense), category, and date range.
+ * Categories are filtered based on selected type.
+ */
+import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from './ui/dialog';
-import { Category } from '../App';
+} from "./ui/dialog";
+import { Category } from "../App";
 
 interface FilterValues {
-  type: 'all' | 'income' | 'expense';
+  type: "all" | "income" | "expense";
   categoryId: string;
   start: string;
   end: string;
@@ -27,30 +31,36 @@ interface FilterDialogProps {
 
 export function FilterTransactionDialog({ initial = {}, categories = [], onApply }: FilterDialogProps) {
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<'all' | 'income' | 'expense'>(initial.type ?? 'all');
-  const [categoryId, setCategoryId] = useState<string>(initial.categoryId ?? '');
-  const [start, setStart] = useState<string>(initial.start ?? '');
-  const [end, setEnd] = useState<string>(initial.end ?? '');
-  
+
+  // Filter form state
+  const [type, setType] = useState<"all" | "income" | "expense">(initial.type ?? "all");
+  const [categoryId, setCategoryId] = useState<string>(initial.categoryId ?? "");
+  const [start, setStart] = useState<string>(initial.start ?? "");
+  const [end, setEnd] = useState<string>(initial.end ?? "");
+
+  // Reset form when initial values change
   useEffect(() => {
-    setType(initial.type ?? 'all');
-    setCategoryId(initial.categoryId ?? '');
-    setStart(initial.start ?? '');
-    setEnd(initial.end ?? '');
+    setType(initial.type ?? "all");
+    setCategoryId(initial.categoryId ?? "");
+    setStart(initial.start ?? "");
+    setEnd(initial.end ?? "");
   }, [initial]);
 
-  const visibleCategories = categories.filter(c => type === 'all' ? true : c.type === type);
+  // Filter categories based on selected type
+  const visibleCategories = categories.filter((c) => (type === "all" ? true : c.type === type));
 
+  // Apply filters and close dialog
   const handleApply = () => {
     onApply({ type, categoryId, start, end });
     setOpen(false);
   };
 
+  // Reset all filter values to defaults
   const handleClear = () => {
-    setType('all');
-    setCategoryId('');
-    setStart('');
-    setEnd('');
+    setType("all");
+    setCategoryId("");
+    setStart("");
+    setEnd("");
   };
 
   return (
