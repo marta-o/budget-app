@@ -46,7 +46,7 @@ export const DialogContent = React.forwardRef<
             "backdrop-blur-none bg-opacity-100", // zero „szkła”
             className
           )}
-          style={{ backgroundColor: "#94B3FD" }}
+          style={{ backgroundColor: "#dec5feff" }}
 
           {...props}
         >

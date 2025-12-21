@@ -2,8 +2,7 @@
  * EditTransactionDialog - Modal dialog for editing existing transactions.
  */
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import {
+import { Button } from "./ui/button";import { Dropdown } from './ui/dropdown';import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -115,33 +114,32 @@ export function EditTransactionDialog({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Typ
             </label>
-            <select
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <Dropdown
               value={type}
-              onChange={(e) => setType(e.target.value as 'income' | 'expense')}
-            >
-              <option value="expense">Wydatek</option>
-              <option value="income">Przychód</option>
-            </select>
+              options={[
+                { value: "expense", label: "Wydatek" },
+                { value: "income", label: "Przychód" }
+              ]}
+              onChange={(e) => setType(e as 'income' | 'expense')}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Kategoria
             </label>
-            <select
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <Dropdown
               value={String(categoryId)}
+              options={visibleCategories.map((c) => ({
+                value: String(c.id),
+                label: c.name
+              }))}
               onChange={(e) =>
-                setCategoryId(e.target.value === '' ? '' : Number(e.target.value))
+                setCategoryId(e === '' ? '' : Number(e))
               }
-            >
-              {visibleCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              className="w-full"
+            />
           </div>
 
           <div>
@@ -189,8 +187,8 @@ export function EditTransactionDialog({
             <DialogClose asChild>
               <Button
                 variant="outline"
-                className="border-0 !bg-[#94DAFF] !text-black"
-                style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+                className="border-0 !bg-[#ac85e0ff] !text-black"
+                style={{ backgroundColor: "#ac85e0ff", color: "#000000" }}
                 type="button"
               >
                 Anuluj

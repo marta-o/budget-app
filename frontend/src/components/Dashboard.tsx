@@ -125,54 +125,60 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="text-white p-4 md:p-6" style={{ backgroundColor: "#B983FF" }}>
+      <div className="text-black p-4 md:p-6" style={{ 
+        backgroundImage: "url('/background.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center"
+      }}>
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl" style={{ backgroundColor: "#94B3FD" }}>
+            <div className="p-3 rounded-xl" style={{ backgroundColor: "#dec5feff" }}>
               <Wallet className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-white">Menedżer Finansów</h1>
+              <h1 className="text-black">Menedżer Finansów</h1>
               <p className="text-black text-sm">{username}</p>
             </div>
           </div>
             <Button 
               variant="ghost" 
-              className="text-white hover:bg-white/20 gap-2" 
+              className="bg-white/80 border border-gray-500 text-black hover:bg-white gap-2"
               onClick={onLogout} 
               aria-label="Wyloguj"
-              style={{ backgroundColor: "#94B3FD", color: "#000000" }}
           >
   <LogOut className="w-4 h-4" /> Wyloguj
 </Button>
         </div>
 
-          <div className="bg-white/10 rounded-2xl p-6">
+          <div className="rounded-2xl p-6 shadow-lg"
+            style={{
+             background: `linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0.7))`
+             }}>
             <div className="flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5" />
-              <h2 className="text-white capitalize">{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
+              <Calendar className="w-5 h-5 text-black" />
+              <h2 className="text-black capitalize">{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-              <div className="flex flex-col items-center text-center rounded-xl border border-white/30 bg-white/10 backdrop-blur-md p-4 shadow-lg">
-                <p className="text-black text-sm mb-1">Saldo miesiąca</p>
-                <p className={`text-3xl ${balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+              <div className="flex flex-col items-center text-center rounded-xl border border-slate-200 !bg-white p-4 shadow-lg">
+                <p className="text-slate-900 text-sm mb-1">Saldo miesiąca</p>
+                <p className={`text-3xl ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {balance.toFixed(2)} zł
                 </p>
               </div>
 
-              <div className="flex flex-col items-center text-center rounded-xl border border-white/30 bg-white/10 backdrop-blur-md p-4 shadow-lg">
-                <p className="text-black text-sm mb-1">Przychody</p>
-                <p className="text-3xl text-green-300">
+              <div className="flex flex-col items-center text-center rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+                <p className="text-slate-900 text-sm mb-1">Przychody</p>
+                <p className="text-3xl text-green-600">
                 +{totalIncome.toFixed(2)} zł
                 </p>
               </div>
 
-              <div className="flex flex-col items-center text-center rounded-xl border border-white/30 bg-white/10 backdrop-blur-md p-4 shadow-lg">
-                <p className="text-black text-sm mb-1">Wydatki</p>
-                <p className="text-3xl text-red-300">
+              <div className="flex flex-col items-center text-center rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+                <p className="text-slate-900 text-sm mb-1">Wydatki</p>
+                <p className="text-3xl text-red-600">
                 -{totalExpenses.toFixed(2)} zł
                 </p>
               </div>
@@ -182,7 +188,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </div>
       </div>
 
-      <div style={{ marginTop: "2rem" }}>
+      <div className="max-w-7xl mx-auto" style={{ marginTop: "2rem", paddingLeft: "1rem", paddingRight: "1rem" }}>
       <Tabs
         defaultValue="transactions"
         className="space-y-4"
@@ -197,8 +203,8 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         }}
       >
         <TabsList
-          className="grid w-full grid-cols-4 rounded-2xl p-1 !bg-[#94DAFF] !text-black"
-          style={{ backgroundColor: "#94DAFF" }} //kolor paska
+          className="grid w-full grid-cols-4 rounded-2xl p-1 !bg-[#C088E3] !text-black"
+          style={{ backgroundColor: "#dec5feff" }} //kolor paska
         >
           <TabsTrigger value="transactions" className="!text-black">
             Transakcje

@@ -104,7 +104,7 @@ export function TransactionList({
           <AddTransactionDialog onAdd={onAdd} categories={categories} />
           <Button 
             variant="ghost"
-            style={{ backgroundColor: "#94B3FD", color: "#000000" }}
+            style={{ backgroundColor: "#dec5feff", color: "#000000" }}
             className="border-0 hover:bg-[#7ecfff]"
             onClick={() => { if (onToggleFilters) { onToggleFilters(); } else { setLocalShowFilters(v => !v); } }}>
             Filtruj
@@ -115,7 +115,7 @@ export function TransactionList({
           <Button
             variant="default"
             className="border-0"
-            style={{ backgroundColor: "#94B3FD", color: "#0f172a" }}
+            style={{ backgroundColor: "#dec5feff", color: "#0f172a" }}
              onClick={() => {
                setSearchVisible(prev => {
                  const next = !prev;
@@ -151,7 +151,7 @@ export function TransactionList({
 
       {effectiveShowFilters && (
         <div ref={filtersRef} id="filters-block" className="mb-4 flex flex-col items-center gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#94B3FD" }}>
+          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#ffffffff", border: "2px solid #EEEEEE" }}>
             <div className="flex items-center gap-2">
               <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
               <div className="w-40">

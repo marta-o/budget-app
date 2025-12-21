@@ -1110,9 +1110,7 @@
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
-  .p-1 {
-    padding: calc(var(--spacing) * 1);
-  }
+  
 
   .p-2 {
     padding: calc(var(--spacing) * 2);
@@ -2623,6 +2621,6 @@ html {
 }
 
 button[data-slot="tabs-trigger"][data-state="active"] {
-  border-color: #99FEFF !important;
-  box-shadow: 0 0 0 2px #99FEFF;
+  border-color: rgb(160, 107, 229) !important;
+  box-shadow: 0 0 0 2px rgb(160, 107, 229);
 }

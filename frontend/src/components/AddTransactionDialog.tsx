@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "./ui/button";
+import { Dropdown } from "./ui/dropdown";
 import {
   Dialog,
   DialogContent,
@@ -66,7 +67,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
       <Button
         className="gap-2"
         onClick={() => setIsOpen(true)}
-        style={{ backgroundColor: "#94B3FD", color: "#000000" }}
+        style={{ backgroundColor: "#dec5feff", color: "#000000" }}
       >
         <Plus className="w-4 h-4" />
         Dodaj Transakcję
@@ -88,33 +89,32 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Typ
               </label>
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              <Dropdown
                 value={type}
-                onChange={e => setType(e.target.value as 'income' | 'expense')}
-              >
-                <option value="expense">Wydatek</option>
-                <option value="income">Przychód</option>
-              </select>
+                options={[
+                  { value: "expense", label: "Wydatek" },
+                  { value: "income", label: "Przychód" }
+                ]}
+                onChange={(e) => setType(e as 'income' | 'expense')}
+                className="w-full"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Kategoria
               </label>
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              <Dropdown
                 value={String(categoryId)}
-                onChange={e =>
-                  setCategoryId(e.target.value === '' ? '' : Number(e.target.value))
+                options={visibleCategories.map((c) => ({
+                  value: String(c.id),
+                  label: c.name
+                }))}
+                onChange={(e) =>
+                  setCategoryId(e === '' ? '' : Number(e))
                 }
-              >
-                {visibleCategories.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
 
             <div>
@@ -163,8 +163,8 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
               <DialogClose asChild>
                 <Button
                   variant="outline"
-                  className="border-0 !bg-[#94DAFF] !text-black hover:!bg-[#7ecfff]"
-                  style={{ backgroundColor: "#94DAFF", color: "#000000" }}
+                  className="border-0 !bg-[#c4a2efff] !text-black hover:!bg-[#7ecfff]"
+                  style={{ backgroundColor: "#c4a2efff", color: "#000000" }}
                   type="button"
                 >
                   Anuluj
