@@ -35,10 +35,12 @@ export function CategoryBreakdown({ transactions, categories }: CategoryBreakdow
     }, {} as Record<string, number>);
 
   // Transform data for pie chart
-  const chartData = Object.entries(expensesByCategory).map(([name, value]) => ({
-    name,
-    value: parseFloat(value.toFixed(2)),
-  }));
+  const chartData = Object.entries(expensesByCategory)
+    .map(([name, value]) => ({
+      name,
+      value: parseFloat(value.toFixed(2)),
+    }))
+    .sort((a, b) => b.value - a.value);
 
   return (
     <Card>

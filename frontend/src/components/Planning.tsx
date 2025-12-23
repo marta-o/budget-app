@@ -24,6 +24,12 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
   // Fetch all transactions for planning
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
 
+  // Month formatter for labels
+  const monthFormatter = useMemo(
+    () => new Intl.DateTimeFormat("pl-PL", { month: "long" }),
+    []
+  );
+
   useEffect(() => {
     let mounted = true;
     if (!token) return;
@@ -42,6 +48,21 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
   // Use fetched transactions if available
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
+
+  // Last three months based on current date
+  const lastThreeMonths = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 3 }).map((_, idx) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - idx, 1);
+      const labelRaw = monthFormatter.format(date);
+      const label = labelRaw.charAt(0).toUpperCase() + labelRaw.slice(1);
+      return {
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        label,
+      };
+    });
+  }, [monthFormatter]);
 
   // Extract unique years from transactions for year filter dropdown
   const years = useMemo(() => {
@@ -79,6 +100,28 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
       return true;
     });
   }, [sourceTransactions, type, categoryId, start, end, year, categories]);
+
+  // Monthly summaries for last three months
+  const monthlySummaries = useMemo(() => {
+    return lastThreeMonths.map(({ month, year: y, label }) => {
+      const txInMonth = filteredTx.filter((t) => {
+        const d = new Date(t.date);
+        return d.getFullYear() === y && d.getMonth() === month;
+      });
+      const income = txInMonth
+        .filter((t) => getTransactionType(t, categories) === "income")
+        .reduce((s, t) => s + t.amount, 0);
+      const expense = txInMonth
+        .filter((t) => getTransactionType(t, categories) === "expense")
+        .reduce((s, t) => s + t.amount, 0);
+      return {
+        label,
+        income,
+        expense,
+        balance: income - expense,
+      };
+    });
+  }, [filteredTx, lastThreeMonths, categories]);
 
   // Calculate totals using category-derived type
   const totalIncome = filteredTx
@@ -165,6 +208,72 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
               Wyczyść
             </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Comparison of last 3 months */}
+      <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
+        <h3 className="text-lg font-semibold text-[#7450d4] mb-4">Porównanie Ostatnich 3 Miesięcy</h3>
+        <div className="space-y-3">
+          {monthlySummaries.map((m) => (
+            <div
+              key={m.label}
+              className="flex flex-col gap-1 rounded-xl px-4 py-3"
+              style={{ backgroundColor: "#ffffffff", borderLeft: "6px solid #dec5feff" }}
+            >
+              <div className="flex items-center justify-between text-base font-semibold text-[#5b4bb7]">
+                <span>{m.label}</span>
+              </div>
+              <div className="flex justify-between gap-6 text-sm text-[#4b5563]">
+                <div className="flex flex-col">
+                  <span className="font-semibold text-[#6c4dd4]">Przychody</span>
+                  <span className="text-[#3b82f6]">+{m.income.toFixed(2)} zł</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-[#6c4dd4]">Wydatki</span>
+                  <span className="text-[#94A3B8]">-{m.expense.toFixed(2)} zł</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-[#6c4dd4]">Saldo</span>
+                  <span className="text-[#6c4dd4]">{m.balance.toFixed(2)} zł</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Predictions by category */}
+      <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
+        <h3 className="text-lg font-semibold text-[#B983FF] mb-1">Przewidywania Według Kategorii</h3>
+        <p className="text-sm text-slate-600 mb-4">Średnie wydatki w kategoriach</p>
+        <div className="space-y-2">
+          {/* Placeholder categories */}
+          {[
+            { name: "Czynsz", amount: "400.00 zł", trend: "malejący" },
+            { name: "Zakupy spożywcze", amount: "60.17 zł", trend: "malejący" },
+            { name: "Rozrywka", amount: "40.00 zł", trend: "malejący" },
+            { name: "Media", amount: "21.67 zł", trend: "malejący" },
+            { name: "Transport", amount: "15.00 zł", trend: "malejący" },
+            { name: "Zdrowie", amount: "20.00 zł", trend: "malejący" },
+            { name: "Zakupy", amount: "100.00 zł", trend: "rosnący" },
+            { name: "Inne wydatki", amount: "58.00 zł", trend: "malejący" }
+          ].map((cat) => (
+            <div
+              key={cat.name}
+              className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition"
+              style={{ backgroundColor: "#ffffffff", border: "2px solid #dec5feff" }}
+            >
+              <div>
+                <p className="font-semibold text-[#B983FF]">{cat.name}</p>
+                <p className="text-xs text-slate-600">Trend: {cat.trend}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-[#B983FF]">{cat.amount}</p>
+                <p className="text-xs text-slate-600">średnio/miesiąc</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       
