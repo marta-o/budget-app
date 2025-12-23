@@ -12,6 +12,7 @@ import { EditTransactionDialog } from "./EditTransactionDialog";
 import { DeleteTransactionDialog } from "./DeleteTransactionDialog";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import Dropdown from "./ui/dropdown";
+import { DatePicker } from "./ui/calendarview";
 
 interface FilterVals {
   type: "all" | "income" | "expense";
@@ -185,21 +186,19 @@ export function TransactionList({
 
             <div className="flex items-center gap-2">
               <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
-              <input
-                type="date"
-                className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+              <DatePicker
                 value={currentFilters.start}
-                onChange={e => onApplyFilters({ ...currentFilters, start: e.target.value })}
+                onChange={(v) => onApplyFilters({ ...currentFilters, start: v })}
+                placeholder="Wybierz datę"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
-              <input
-                type="date"
-                className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+              <DatePicker
                 value={currentFilters.end}
-                onChange={e => onApplyFilters({ ...currentFilters, end: e.target.value })}
+                onChange={(v) => onApplyFilters({ ...currentFilters, end: v })}
+                placeholder="Wybierz datę"
               />
             </div>
 

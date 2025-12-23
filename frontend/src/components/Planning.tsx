@@ -6,6 +6,7 @@ import { Transaction, Category, getTransactionType } from "../App";
 import { getTransactions } from "../api";
 import { Dropdown } from "./ui/dropdown";
 import { Button } from "./ui/button";
+import { DatePicker } from "./ui/calendarview";
 
 interface PlanningProps {
   transactions: Transaction[];
@@ -176,22 +177,12 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
           <div className="flex items-center gap-2">
             <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
-            <input
-              type="date"
-              value={start}
-              onChange={e => setStart(e.target.value)}
-              className="border border-slate-300 px-3 py-2 rounded-md bg-white"
-            />
+            <DatePicker value={start} onChange={setStart} placeholder="Wybierz datę" />
           </div>
 
           <div className="flex items-center gap-2">
             <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
-            <input
-              type="date"
-              value={end}
-              onChange={e => setEnd(e.target.value)}
-              className="border border-slate-300 px-3 py-2 rounded-md bg-white"
-            />
+            <DatePicker value={end} onChange={setEnd} placeholder="Wybierz datę" />
           </div>
 
           <div>

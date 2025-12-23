@@ -10,6 +10,7 @@ import { CategoryBreakdown } from "./CategoryBreakdown";
 import { YearlyChart } from "./YearlyChart";
 import { Dropdown } from "./ui/dropdown";
 import { Button } from "./ui/button";
+import { DatePicker } from "./ui/calendarview";
 
 interface AnalyticsProps {
   transactions: Transaction[];
@@ -137,21 +138,19 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
 
         <div className="flex items-center gap-2">
           <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
-          <input
-            type="date"
+          <DatePicker
             value={start}
-            onChange={e => setStart(e.target.value)}
-            className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+            onChange={(v) => setStart(v)}
+            placeholder="Wybierz datę"
           />
         </div>
 
         <div className="flex items-center gap-2">
           <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
-          <input
-            type="date"
+          <DatePicker
             value={end}
-            onChange={e => setEnd(e.target.value)}
-            className="border border-slate-300 px-3 py-2 rounded-md bg-white"
+            onChange={(v) => setEnd(v)}
+            placeholder="Wybierz datę"
           />
         </div>
 
