@@ -39,8 +39,6 @@ def list_transactions(
     start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     q: Optional[str] = Query(None, description="Search in title or category name"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
 ):
     """Get all transactions for the authenticated user with optional filters."""
     return crud.get_transactions(
@@ -48,7 +46,7 @@ def list_transactions(
         parse_int(category_id),
         parse_date(start),
         parse_date(end),
-        q, skip, limit
+        q
     )
 
 @router.post("/", response_model=schemas.TransactionOut, status_code=201)

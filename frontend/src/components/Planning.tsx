@@ -1,9 +1,9 @@
 /**
- * Planning - Component for budget planning with transaction filtering.
+ * Planning - Component for budget planning with transaction filtering and predictions.
  */
 import { useMemo, useState, useEffect } from "react";
 import { Transaction, Category, getTransactionType } from "../App";
-import { getTransactions } from "../api";
+import { getTransactions, getForecastAll } from "../api";
 import { Dropdown } from "./ui/dropdown";
 import { Button } from "./ui/button";
 import { DatePicker } from "./ui/calendarview";
@@ -12,6 +12,27 @@ interface PlanningProps {
   transactions: Transaction[];
   categories: Category[];
   token?: string;
+}
+
+interface Prediction {
+  category_id: number;
+  category: string;
+  estimated_amount: number;
+  has_data: boolean;
+  confidence: string;
+  method: string;
+  is_ml: boolean;
+}
+
+interface ForecastResponse {
+  user_id: number;
+  month: number;
+  month_name: string;
+  predictions: Prediction[];
+  total_estimated: number;
+  categories_with_data: number;
+  categories_with_ml: number;
+  total_categories: number;
 }
 
 export function Planning({ transactions, categories, token }: PlanningProps) {
@@ -25,12 +46,18 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
   // Fetch all transactions for planning
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
 
+  // Predictions state
+  const [predictions, setPredictions] = useState<ForecastResponse | null>(null);
+  const [predictionMonth, setPredictionMonth] = useState<number>(new Date().getMonth() + 1);
+  const [loadingPredictions, setLoadingPredictions] = useState(false);
+
   // Month formatter for labels
   const monthFormatter = useMemo(
     () => new Intl.DateTimeFormat("pl-PL", { month: "long" }),
     []
   );
 
+  // Fetch transactions
   useEffect(() => {
     let mounted = true;
     if (!token) return;
@@ -46,6 +73,28 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
       mounted = false;
     };
   }, [token]);
+
+  // Fetch predictions when month changes
+  useEffect(() => {
+    let mounted = true;
+    if (!token) return;
+    
+    setLoadingPredictions(true);
+    (async () => {
+      try {
+        const res = await getForecastAll(token, predictionMonth);
+        if (mounted) setPredictions(res);
+      } catch (err) {
+        console.error("Failed to load predictions:", err);
+        if (mounted) setPredictions(null);
+      } finally {
+        if (mounted) setLoadingPredictions(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [token, predictionMonth]);
 
   // Use fetched transactions if available
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
@@ -236,36 +285,100 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
       {/* Predictions by category */}
       <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
-        <h3 className="text-lg font-semibold text-[#B983FF] mb-1">Przewidywania Według Kategorii</h3>
-        <p className="text-sm text-slate-600 mb-4">Średnie wydatki w kategoriach</p>
-        <div className="space-y-2">
-          {/* Placeholder categories */}
-          {[
-            { name: "Czynsz", amount: "400.00 zł", trend: "malejący" },
-            { name: "Zakupy spożywcze", amount: "60.17 zł", trend: "malejący" },
-            { name: "Rozrywka", amount: "40.00 zł", trend: "malejący" },
-            { name: "Media", amount: "21.67 zł", trend: "malejący" },
-            { name: "Transport", amount: "15.00 zł", trend: "malejący" },
-            { name: "Zdrowie", amount: "20.00 zł", trend: "malejący" },
-            { name: "Zakupy", amount: "100.00 zł", trend: "rosnący" },
-            { name: "Inne wydatki", amount: "58.00 zł", trend: "malejący" }
-          ].map((cat) => (
-            <div
-              key={cat.name}
-              className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition"
-              style={{ backgroundColor: "#ffffffff", border: "2px solid #dec5feff" }}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-[#B983FF]">Prognoza Wydatków (ML)</h3>
+            <p className="text-sm text-slate-600">
+              {predictions?.categories_with_ml 
+                ? `🤖 ${predictions.categories_with_ml} kategorii z modelem ML`
+                : predictions?.categories_with_data 
+                  ? `${predictions.categories_with_data} kategorii z danymi statystycznymi`
+                  : "Brak historii transakcji"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-600">Miesiąc:</label>
+            <select
+              value={predictionMonth}
+              onChange={(e) => setPredictionMonth(Number(e.target.value))}
+              className="px-3 py-1.5 border border-[#dec5fe] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B983FF]"
             >
-              <div>
-                <p className="font-semibold text-[#B983FF]">{cat.name}</p>
-                <p className="text-xs text-slate-600">Trend: {cat.trend}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-[#B983FF]">{cat.amount}</p>
-                <p className="text-xs text-slate-600">średnio/miesiąc</p>
-              </div>
-            </div>
-          ))}
+              {["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
+                "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
+              ].map((name, i) => (
+                <option key={i} value={i + 1}>{name}</option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        {/* Total estimate */}
+        {predictions && (
+          <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-[#B983FF] to-[#7c3aed] text-white">
+            <p className="text-sm opacity-90">Suma przewidywanych wydatków na {predictions.month_name}</p>
+            <p className="text-2xl font-bold">{predictions.total_estimated.toFixed(2)} zł</p>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {loadingPredictions && (
+          <div className="text-center py-8 text-slate-500">Ładowanie predykcji...</div>
+        )}
+
+        {/* Predictions list */}
+        {!loadingPredictions && predictions && (
+          <div className="space-y-2">
+            {predictions.predictions.map((pred) => (
+              <div
+                key={pred.category_id}
+                className="flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50 transition"
+                style={{ backgroundColor: "#ffffffff", border: "2px solid #dec5feff" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-[#B983FF]">{pred.category}</p>
+                      {pred.is_ml ? (
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                          🤖 ML
+                        </span>
+                      ) : pred.has_data ? (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                          📊 Statystyka
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {pred.has_data ? (
+                        <>
+                          {pred.confidence === "wysoka" ? "wysoka pewność" : 
+                           pred.confidence === "średnia" ? "średnia pewność" : 
+                           pred.confidence === "niska" ? "niska pewność" : ""}
+                          {pred.method && ` · ${pred.method === "random_forest" ? "Random Forest" : 
+                            pred.method === "monthly_average" ? "średnia miesięczna" : 
+                            pred.method === "category_average" ? "średnia kategorii" : pred.method}`}
+                        </>
+                      ) : (
+                        <span className="text-slate-400">Brak danych historycznych</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-lg text-[#B983FF]">{pred.estimated_amount.toFixed(2)} zł</p>
+                  <p className="text-xs text-slate-500">prognoza</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* No predictions fallback */}
+        {!loadingPredictions && !predictions && (
+          <div className="text-center py-8 text-slate-500">
+            Nie udało się załadować predykcji
+          </div>
+        )}
       </div>
       
     </div>
