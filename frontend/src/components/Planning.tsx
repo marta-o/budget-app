@@ -135,7 +135,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-4">
-        <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#ffffffff", border: "2px solid #EEEEEE" }}>
+        <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#dec5feff", border: "2px solid #EEEEEE" }}>
           <div className="flex items-center gap-2">
             <label className="text-sm" style={{ fontWeight: 700 }}>Rok</label>
             <div className="w-40">

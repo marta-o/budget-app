@@ -7,6 +7,7 @@ import { Wallet, LogIn, UserPlus, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { DatePicker } from "./ui/calendarview";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { login, register } from "../api";
 
@@ -245,7 +246,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <Label htmlFor="date-of-birth">Data urodzenia</Label>
-                    <Input id="date-of-birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                  <DatePicker value={dateOfBirth} onChange={(v) => setDateOfBirth(v)} placeholder="Wybierz datę" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gender">Płeć</Label>

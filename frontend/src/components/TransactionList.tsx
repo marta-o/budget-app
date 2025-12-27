@@ -152,7 +152,7 @@ export function TransactionList({
 
       {effectiveShowFilters && (
         <div ref={filtersRef} id="filters-block" className="mb-4 flex flex-col items-center gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#ffffffff", border: "2px solid #EEEEEE" }}>
+          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#dec5feff", border: "2px solid #EEEEEE" }}>
             <div className="flex items-center gap-2">
               <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
               <div className="w-40">
@@ -205,7 +205,7 @@ export function TransactionList({
             <div>
               <Button
                 onClick={onClearFilters}
-                style={{ backgroundColor: "#ffffff", color: "#000000" }}
+                style={{ backgroundColor: "#ffffffff", color: "#000000" }}
               >
                 Wyczyść
               </Button>

@@ -11,6 +11,8 @@ import { TransactionList } from "./TransactionList";
 import { Analytics } from "./Analytics";
 import { Planning } from "./Planning";
 import { Transaction, Category, getTransactionType } from "../App";
+import { Education } from "./Education";  
+
 
 interface DashboardProps {
   username: string;
@@ -143,7 +145,8 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
           </div>
             <Button 
               variant="ghost" 
-              className="bg-white/80 border border-gray-500 text-black hover:bg-white gap-2"
+              className="border border-gray-500 text-black gap-2"
+              style={{ backgroundColor: "#dec5feff", color: "#000000" }}
               onClick={onLogout} 
               aria-label="Wyloguj"
           >
@@ -157,7 +160,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
              }}>
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-5 h-5 text-black" />
-              <h2 className="text-black capitalize">{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
+              <h2 className="capitalize" style={{ color: "#ac85e0ff" }}>{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -255,7 +258,9 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </TabsContent>
 
         <TabsContent value="news" className="space-y-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm">Edukacja — jeszcze w budowie</div>
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <Education />
+          </div>
         </TabsContent>
       </Tabs>
       </div>

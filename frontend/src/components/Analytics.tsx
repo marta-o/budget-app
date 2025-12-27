@@ -96,7 +96,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
   return (
   <div className="space-y-4">
     <div className="flex flex-col items-center gap-4">
-      <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#ffffffff", border: "2px solid #EEEEEE" }}>
+      <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#dec5feff", border: "2px solid #EEEEEE" }}>
         <div className="flex items-center gap-2">
           <label className="text-sm" style={{ fontWeight: 700 }}>Rok</label>
           <div className="w-40">
@@ -200,12 +200,10 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
-        <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Rozkład wydatków wg kategorii</h3>
           <CategoryBreakdown transactions={filteredTx} categories={categories} />
       </div>
 
       <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
-        <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Przychody i wydatki</h3>
           <YearlyChart transactions={filteredTx} categories={categories} year={year ? Number(year) : undefined} />
       </div>
     </div>
