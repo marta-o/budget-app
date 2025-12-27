@@ -160,7 +160,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
              }}>
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-5 h-5 text-black" />
-              <h2 className="capitalize" style={{ color: "#ac85e0ff" }}>{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
+              <h2 className="capitalize" style={{ color: "#000000ff" }}>{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

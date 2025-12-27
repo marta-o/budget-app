@@ -2,7 +2,9 @@
  * EditTransactionDialog - Modal dialog for editing existing transactions.
  */
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";import { Dropdown } from './ui/dropdown';import {
+import { Button } from "./ui/button";
+import { DatePicker } from "./ui/calendarview";
+import { Dropdown } from './ui/dropdown';import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -174,12 +176,11 @@ export function EditTransactionDialog({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Data
             </label>
-            <input
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              type="date"
+            <DatePicker
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
+              onChange={(v) => setDate(v)}
+              placeholder="Wybierz datę"
+              fromYear={2000}
             />
           </div>
 
@@ -188,7 +189,7 @@ export function EditTransactionDialog({
               <Button
                 variant="outline"
                 className="border-0 !bg-[#ac85e0ff] !text-black"
-                style={{ backgroundColor: "#ac85e0ff", color: "#000000" }}
+                style={{ backgroundColor: "#caa5fcff", color: "#000000" }}
                 type="button"
               >
                 Anuluj
