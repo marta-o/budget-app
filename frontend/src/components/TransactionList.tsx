@@ -2,7 +2,7 @@
  * TransactionList - displays list of transactions with filtering and search.
  * Supports add, edit, delete operations via dialogs.
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { ArrowUpCircle, ArrowDownCircle, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -57,8 +57,16 @@ export function TransactionList({
   const [searchVisible, setSearchVisible] = useState(false);
   const [localShowFilters, setLocalShowFilters] = useState(false);
   const filtersRef = useRef<HTMLDivElement | null>(null);
-
-  const effectiveShowFilters = (typeof showFilters !== 'undefined') ? showFilters : localShowFilters;
+  // Keep filters panel open when any filter is active
+  const hasActiveFilters = (
+    currentFilters.type !== 'all' ||
+    (currentFilters.categoryId && currentFilters.categoryId.length > 0) ||
+    !!currentFilters.start ||
+    !!currentFilters.end
+  );
+  const effectiveShowFilters = (typeof showFilters !== 'undefined')
+    ? (showFilters || hasActiveFilters)
+    : (localShowFilters || hasActiveFilters);
 
   useEffect(() => {
     if (effectiveShowFilters) {
@@ -98,6 +106,28 @@ export function TransactionList({
     setToDelete(null);
   };
 
+  // Derive displayed transactions locally using filters
+  const displayTransactions = useMemo(() => {
+    const { type, categoryId, start, end } = currentFilters;
+    let list = transactions;
+
+    if (type !== 'all') {
+      list = list.filter(t => getTransactionType(t, categories) === type);
+    }
+
+    if (categoryId && categoryId.length > 0) {
+      const ids = new Set(categoryId.map(id => Number(id)));
+      list = list.filter(t => t.category_id !== null && ids.has(Number(t.category_id)));
+    }
+
+    const s = start ? new Date(start) : null;
+    const e = end ? new Date(end) : null;
+    if (s) list = list.filter(t => new Date(t.date) >= s);
+    if (e) list = list.filter(t => new Date(t.date) <= e);
+
+    return list;
+  }, [transactions, currentFilters, categories]);
+
   return (
     <>
       <div className="w-full flex justify-center items-center gap-3 mb-4">
@@ -107,7 +137,18 @@ export function TransactionList({
             variant="ghost"
             style={{ backgroundColor: "#dec5feff", color: "#000000" }}
             className="border-0 hover:bg-[#7ecfff]"
-            onClick={() => { if (onToggleFilters) { onToggleFilters(); } else { setLocalShowFilters(v => !v); } }}>
+            onClick={() => {
+              if (onToggleFilters) {
+                // Parent may control visibility; still enforce open when filters are active
+                onToggleFilters();
+              } else {
+                setLocalShowFilters((v) => {
+                  // Do not allow closing when filters are active
+                  if (hasActiveFilters) return true;
+                  return !v;
+                });
+              }
+            }}>
             Filtruj
           </Button>
         </div>
@@ -220,10 +261,10 @@ export function TransactionList({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {transactions.length === 0 ? (
+            {displayTransactions.length === 0 ? (
               <p className="text-center text-slate-500 py-8">Brak transakcji</p>
             ) : (
-              transactions.map((transaction) => {
+              displayTransactions.map((transaction) => {
                 const txType = getTransactionType(transaction, categories);
                 return (
                   <div
