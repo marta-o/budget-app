@@ -12,14 +12,14 @@ interface CategoryBreakdownProps {
 
 // Color palette for pie chart segments
 const COLORS = [
-  "#A78BFA",
-  "#ca5cf6ff",
-  "#60A5FA",
-  "#B983FF",
-  "#94B3FD",
-  "#7C3AED",
-  "#6cb6d8ff",
-  "#60eceeff",
+  "#f37f88ff", 
+  "#eeac72ff", 
+  "#75e6f5ff", 
+  "#6fd4afff", 
+  "#72b3fdff", 
+  "#a487f1ff", 
+  "#f18dc4ff", 
+  "#dbc232ff", 
 ];
 
 export function CategoryBreakdown({ transactions, categories }: CategoryBreakdownProps) {

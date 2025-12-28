@@ -48,12 +48,12 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#5b21b6" />
-              <YAxis tick={{ fontSize: 12 }} stroke="#5b21b6" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
               <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e6e0ff", borderRadius: "8px" }} />
               <Legend wrapperStyle={{ paddingTop: 8 }} />
-              <Bar dataKey="income" fill="#B983FF" name="Przychody" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="expenses" fill="#7C3AED" name="Wydatki" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="income" fill="#f37f88ff" name="Przychody" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="expenses" fill="#6fd4afff" name="Wydatki" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -92,12 +92,12 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#5b21b6" />
-            <YAxis tick={{ fontSize: 12 }} stroke="#5b21b6" />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
+            <YAxis tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
             <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e6e0ff", borderRadius: "8px" }} />
             <Legend wrapperStyle={{ paddingTop: 8 }} />
-            <Bar dataKey="income" fill="#94B3FD" name="Średnie przychody" radius={[6, 6, 0, 0]} />
-            <Bar dataKey="expenses" fill="#B983FF" name="Średnie wydatki" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="income" fill="#eeac72ff" name="Średnie przychody" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="expenses" fill="#72b3fdff" name="Średnie wydatki" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

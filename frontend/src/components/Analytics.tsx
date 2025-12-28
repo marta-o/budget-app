@@ -200,12 +200,10 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
-        <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Rozkład wydatków wg kategorii</h3>
           <CategoryBreakdown transactions={filteredTx} categories={categories} />
       </div>
 
       <div className="text-center border-2 rounded-lg p-4" style={{ borderColor: "#B983FF" }}>
-        <h3 className="font-bold text-lg mb-2" style={{ color: "#B983FF" }}>Przychody i wydatki</h3>
           <YearlyChart transactions={filteredTx} categories={categories} year={year ? Number(year) : undefined} />
       </div>
     </div>
