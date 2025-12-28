@@ -34,18 +34,22 @@ export function CategoryBreakdown({ transactions, categories }: CategoryBreakdow
       return acc;
     }, {} as Record<string, number>);
 
-  // Transform data for pie chart
+  // Calculate total expenses for percentage calculation
+  const totalExpenses = Object.values(expensesByCategory).reduce((sum, v) => sum + v, 0);
+
+  // Transform data for pie chart and sort by percentage descending
   const chartData = Object.entries(expensesByCategory)
     .map(([name, value]) => ({
       name,
       value: parseFloat(value.toFixed(2)),
+      percent: totalExpenses > 0 ? value / totalExpenses : 0,
     }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.percent - a.percent);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Podział Wydatków</CardTitle>
+        <CardTitle style={{ fontSize: '0.5cm' }}>Podział Wydatków</CardTitle>
         <CardDescription>Wydatki według kategorii</CardDescription>
       </CardHeader>
       <CardContent>

@@ -22,22 +22,23 @@ export function DeleteTransactionDialog({ open, onOpenChange, onConfirm }: Delet
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-lg rounded-xl shadow-2xl p-0 bg-white/40 backdrop-blur-2xl border border-white/30 text-gray-900">
-        <DialogHeader className="text-center pb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl text-white">
-          <DialogTitle className="text-xl font-semibold tracking-tight text-white">
+
+        <DialogHeader className="text-center pb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl">
+          <DialogTitle className="text-xl font-semibold tracking-tight text-black">
             Usuń transakcję
           </DialogTitle>
-          <DialogDescription className="text-sm opacity-90 text-white">
+          <DialogDescription className="text-sm opacity-90 text-black">
             Na pewno chcesz usunąć tę transakcję? <br /> Operacji nie będzie można cofnąć.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-5 pb-5 pt-4 flex justify-end gap-2">
+        <div className="px-5 pb-5 pt-4 flex justify-end gap-2 mt-4">
           <DialogClose asChild>
             <Button
               variant="ghost"
               type="button"
               className="!bg-[#ac85e0ff] !text-black"
-              style={{ backgroundColor: "#ac85e0ff", color: "#000000" }}
+              style={{ backgroundColor: "#caa5fcff", color: "#000000" }}
             >
               Anuluj
             </Button>
