@@ -1,6 +1,6 @@
 """
 Predictions router - API endpoints for ML-based spending forecasts.
-Uses Random Forest trained on individual user's transaction history.
+Uses Enhanced Random Forest (v2) with advanced feature engineering.
 Falls back to statistical analysis when insufficient data.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,7 +11,8 @@ from datetime import datetime
 from ..database import get_db
 from ..models import User, Category
 from ..dependencies import get_current_user
-from ..user_predictor import UserMLPredictor
+# Use enhanced predictor v2 with lag features and rolling averages
+from ..user_predictor_v2 import EnhancedMLPredictor as UserMLPredictor
 
 router = APIRouter(prefix="/predictions", tags=["Predictions"])
 
@@ -69,24 +70,28 @@ async def get_forecast_for_category(
     }
 
 
+# W pliku predictions.py
+
 @router.get("/forecast-all")
 async def get_forecast_all_categories(
-    month: Optional[int] = Query(default=None, ge=1, le=12),
+    month: int = Query(..., ge=1, le=12), # Wymagany
+    year: int = Query(..., ge=2020, le=2030), # Wymagany, dodajemy rok
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get ML-based forecast for all expense categories.
+    Get ML-based forecast for all expense categories for specific month and year.
     """
     predictor = get_predictor()
-    target_month = month or datetime.now().month
     
+    # Wywołujemy zaktualizowaną metodę z rokiem
     predictions = predictor.predict_all_categories(
         person_id=current_user.person_id,
-        month=target_month
+        month=month,
+        year=year
     )
     
-    # Add category IDs from database
+    # Reszta kodu bez zmian (mapowanie ID kategorii, sumowanie itp.)
     db_categories = db.query(Category).filter(Category.type == "expense").all()
     db_cat_map = {c.name: c.id for c in db_categories}
     
@@ -97,10 +102,8 @@ async def get_forecast_all_categories(
     for pred in predictions:
         cat_name = pred["category"]
         if cat_name in db_cat_map:
-            if pred.get("is_ml"):
-                ml_count += 1
-            if pred.get("has_data"):
-                data_count += 1
+            if pred.get("is_ml"): ml_count += 1
+            if pred.get("has_data"): data_count += 1
             
             result.append({
                 "category_id": db_cat_map[cat_name],
@@ -116,8 +119,9 @@ async def get_forecast_all_categories(
     
     return {
         "user_id": current_user.person_id,
-        "month": target_month,
-        "month_name": _get_month_name(target_month),
+        "month": month,
+        "year": year, # Dodajemy do response
+        "month_name": _get_month_name(month),
         "predictions": result,
         "total_estimated": round(total, 2),
         "categories_with_data": data_count,
@@ -239,6 +243,29 @@ async def get_available_prediction_categories(
     
     return {
         "categories": [{"id": c.id, "name": c.name} for c in categories]
+    }
+
+
+@router.get("/feature-importance")
+async def get_feature_importance(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get feature importance from the ML model.
+    Shows which factors most influence predictions.
+    """
+    predictor = get_predictor()
+    importance = predictor.get_feature_importance(current_user.person_id)
+    
+    if importance is None:
+        raise HTTPException(
+            status_code=400, 
+            detail="Model ML nie jest jeszcze wytrenowany. Potrzebujesz więcej transakcji."
+        )
+    
+    return {
+        "user_id": current_user.person_id,
+        **importance
     }
 
 

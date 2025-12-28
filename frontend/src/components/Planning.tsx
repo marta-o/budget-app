@@ -48,7 +48,10 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
   // Predictions state
   const [predictions, setPredictions] = useState<ForecastResponse | null>(null);
-  const [predictionMonth, setPredictionMonth] = useState<number>(new Date().getMonth() + 1);
+  const [predictionMonth, setPredictionMonth] = useState<number>(new Date().getMonth() + 1 > 12 ? 1 : new Date().getMonth() + 1);
+  const [predictionYear, setPredictionYear] = useState<number>(
+    new Date().getMonth() + 1 > 12 ? new Date().getFullYear() + 1 : new Date().getFullYear()
+  );
   const [loadingPredictions, setLoadingPredictions] = useState(false);
 
   // Month formatter for labels
@@ -82,7 +85,8 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     setLoadingPredictions(true);
     (async () => {
       try {
-        const res = await getForecastAll(token, predictionMonth);
+        // Przekazujemy też rok
+        const res = await getForecastAll(token, predictionMonth, predictionYear);
         if (mounted) setPredictions(res);
       } catch (err) {
         console.error("Failed to load predictions:", err);
@@ -94,7 +98,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     return () => {
       mounted = false;
     };
-  }, [token, predictionMonth]);
+  }, [token, predictionMonth, predictionYear]);
 
   // Use fetched transactions if available
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
@@ -181,42 +185,6 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     .filter((t) => getTransactionType(t, categories) === "expense")
     .reduce((s, t) => s + t.amount, 0);
 
-  // Budget usage for current month
-  const currentMonthUsage = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    
-    const currentMonthTransactions = sourceTransactions.filter((t) => {
-      const d = new Date(t.date);
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
-    });
-
-    const spent = currentMonthTransactions
-      .filter((t) => getTransactionType(t, categories) === "expense")
-      .reduce((s, t) => s + t.amount, 0);
-
-    // Calculate predicted budget as average of last 3 months (placeholder)
-    const lastThreeMonthsExpenses = lastThreeMonths.map(({ month, year: y }) => {
-      const txInMonth = sourceTransactions.filter((t) => {
-        const d = new Date(t.date);
-        return d.getFullYear() === y && d.getMonth() === month;
-      });
-      return txInMonth
-        .filter((t) => getTransactionType(t, categories) === "expense")
-        .reduce((s, t) => s + t.amount, 0);
-    });
-
-    const avgExpense = lastThreeMonthsExpenses.length > 0
-      ? lastThreeMonthsExpenses.reduce((sum, val) => sum + val, 0) / lastThreeMonthsExpenses.length
-      : 1000; // Fallback if no data
-
-    const predicted = avgExpense > 0 ? avgExpense : 1000;
-    const percentage = predicted > 0 ? Math.min((spent / predicted) * 100, 100) : 0;
-
-    return { spent, predicted, percentage };
-  }, [sourceTransactions, categories, lastThreeMonths]);
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-4">
@@ -287,39 +255,15 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
         </div>
       </div>
 
-      {/* Budget Usage Card */}
-      <div className="rounded-2xl shadow-lg p-6 border-2 border-[#EEEEEE]" style={{ backgroundColor: "#ffffffff" }}>
-        <h3 className="text-xl font-bold text-[#6c4dd4] mb-2">
-          Wykorzystanie Budżetu - Bieżący Miesiąc
-        </h3>
-        <p className="text-sm text-slate-600 mb-4">
-          Wydane {currentMonthUsage.spent.toFixed(2)} zł z przewidywanych {currentMonthUsage.predicted.toFixed(2)} zł
-        </p>
-        
-        {/* Progress bar */}
-        <div className="w-full bg-slate-200 rounded-full h-6 overflow-hidden mb-2">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${currentMonthUsage.percentage}%`,
-              background: 'linear-gradient(to right, #dec5feff, #B983FF)'
-            }}
-          />
-        </div>
-        <p className="text-sm text-slate-700">
-          {currentMonthUsage.percentage.toFixed(1)}% budżetu wykorzystane
-        </p>
-      </div>
-
       {/* Comparison of last 3 months */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]" style={{ backgroundColor: "#ffffffff" }}>
+      <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
         <h3 className="text-lg font-semibold text-[#7450d4] mb-4">Porównanie Ostatnich 3 Miesięcy</h3>
         <div className="space-y-3">
           {monthlySummaries.map((m) => (
             <div
               key={m.label}
-              className="flex flex-col gap-1 rounded-xl px-4 py-3 border border-[#EEEEEE]"
-              style={{ backgroundColor: "#ffffffff", borderLeft: "6px solid #dec5feff", paddingLeft: "12px" }}
+              className="flex flex-col gap-1 rounded-xl px-4 py-3"
+              style={{ backgroundColor: "#ffffffff", borderLeft: "6px solid #dec5feff" }}
             >
               <div className="flex items-center justify-between text-base font-semibold text-[#5b4bb7]">
                 <span>{m.label}</span>
@@ -345,36 +289,133 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
       {/* Predictions by category */}
       <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
-        <h3 className="text-lg font-semibold text-[#B983FF] mb-1">Przewidywania Według Kategorii</h3>
-        <p className="text-sm text-slate-600 mb-4">Średnie wydatki w kategoriach</p>
-        <div className="space-y-2">
-          {/* Placeholder categories */}
-          {[
-            { name: "Czynsz", amount: "400.00 zł", trend: "malejący" },
-            { name: "Zakupy spożywcze", amount: "60.17 zł", trend: "malejący" },
-            { name: "Rozrywka", amount: "40.00 zł", trend: "malejący" },
-            { name: "Media", amount: "21.67 zł", trend: "malejący" },
-            { name: "Transport", amount: "15.00 zł", trend: "malejący" },
-            { name: "Zdrowie", amount: "20.00 zł", trend: "malejący" },
-            { name: "Zakupy", amount: "100.00 zł", trend: "rosnący" },
-            { name: "Inne wydatki", amount: "58.00 zł", trend: "malejący" }
-          ].map((cat) => (
-            <div
-              key={cat.name}
-              className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition"
-              style={{ backgroundColor: "#ffffffff", border: "2px solid #dec5feff" }}
-            >
-              <div>
-                <p className="font-semibold text-[#B983FF]">{cat.name}</p>
-                <p className="text-xs text-slate-600">Trend: {cat.trend}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-[#B983FF]">{cat.amount}</p>
-                <p className="text-xs text-slate-600">średnio/miesiąc</p>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-[#B983FF]">Prognoza Wydatków (ML)</h3>
+            <p className="text-sm text-slate-600">
+              {predictions?.categories_with_ml 
+                ? `🤖 ${predictions.categories_with_ml} kategorii z modelem ML`
+                : predictions?.categories_with_data 
+                  ? `${predictions.categories_with_data} kategorii z danymi statystycznymi`
+                  : "Brak wystarczającej historii transakcji"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Wybór Miesiąca */}
+            <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
+              <select
+                value={predictionMonth}
+                onChange={(e) => setPredictionMonth(Number(e.target.value))}
+                className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer py-1 px-2"
+              >
+                {["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
+                  "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
+                ].map((name, i) => (
+                  <option key={i} value={i + 1}>{name}</option>
+                ))}
+              </select>
             </div>
-          ))}
+            {/* Wybór Roku - NOWOŚĆ */}
+            <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
+              <select
+                value={predictionYear}
+                onChange={(e) => setPredictionYear(Number(e.target.value))}
+                className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer py-1 px-2"
+              >
+                {[0, 1, 2].map((offset) => {
+                  const y = new Date().getFullYear() + offset;
+                  return <option key={y} value={y}>{y}</option>;
+                })}
+              </select>
+            </div>
+          </div>
         </div>
+
+        {/* Total estimate */}
+        {predictions && (
+          <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-[#B983FF] to-[#7c3aed] text-white">
+            <p className="text-sm opacity-90">Suma przewidywanych wydatków na {predictions.month_name}</p>
+            <p className="text-2xl font-bold">{predictions.total_estimated.toFixed(2)} zł</p>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {loadingPredictions && (
+          <div className="text-center py-8 text-slate-500">Ładowanie predykcji...</div>
+        )}
+
+        {/* Predictions List */}
+        {!loadingPredictions && predictions && (
+          <div className="space-y-2">
+            {predictions.predictions.map((pred) => (
+              <div
+                key={pred.category_id}
+                className={`flex items-center justify-between p-4 rounded-lg border transition ${
+                  !pred.has_data ? "opacity-60 bg-slate-50 border-dashed" : "hover:bg-slate-50 bg-white"
+                }`}
+                style={{ 
+                  borderColor: pred.has_data ? "#dec5feff" : "#e2e8f0" 
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className={`font-semibold ${pred.has_data ? "text-[#B983FF]" : "text-slate-500"}`}>
+                        {pred.category}
+                      </p>
+                      
+                      {/* Etykiety statusu */}
+                      {pred.is_ml ? (
+                        <span className="text-[10px] uppercase font-bold tracking-wider bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                          AI Model
+                        </span>
+                      ) : pred.has_data ? (
+                        <span className="text-[10px] uppercase font-bold tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                          Statystyka
+                        </span>
+                      ) : (
+                        <span className="text-[10px] uppercase font-bold tracking-wider bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                          Brak danych
+                        </span>
+                      )}
+                    </div>
+                    
+                    <p className="text-xs text-slate-500 mt-1">
+                       {/* Logika wyświetlania opisu */}
+                      {pred.has_data ? (
+                        <>
+                          {pred.confidence === "wysoka" ? "🟢 Wysoka pewność" : 
+                           pred.confidence === "średnia" ? "🟡 Średnia pewność" : 
+                           "🔴 Niska pewność"}
+                        </>
+                      ) : (
+                        "Za mało transakcji w historii"
+                      )}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  {pred.has_data ? (
+                    <>
+                      <p className="font-bold text-lg text-[#B983FF]">{pred.estimated_amount.toFixed(2)} zł</p>
+                      <p className="text-xs text-slate-500">prognoza</p>
+                    </>
+                  ) : (
+                    <p className="text-sm font-medium text-slate-400">--- zł</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* No predictions fallback */}
+        {!loadingPredictions && !predictions && (
+          <div className="text-center py-8 text-slate-500">
+            Nie udało się załadować predykcji
+          </div>
+        )}
       </div>
       
     </div>

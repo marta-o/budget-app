@@ -7,7 +7,6 @@ import sqlite3
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from pathlib import Path
 from typing import List, Dict, Optional
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
