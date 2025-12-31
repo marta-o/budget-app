@@ -76,11 +76,11 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-md sm:max-w-lg rounded-xl shadow-2xl p-0 bg-white/40 backdrop-blur-2xl border border-white/30 text-gray-900">
-          <DialogHeader className="text-center pb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl text-white">
-            <DialogTitle className="text-xl font-semibold tracking-tight text-white">
+          <DialogHeader className="text-center pb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl">
+            <DialogTitle className="text-xl font-semibold tracking-tight text-black">
               Dodaj transakcję
             </DialogTitle>
-            <DialogDescription className="text-sm opacity-90 text-white">
+            <DialogDescription className="text-sm opacity-90 text-black">
               Dodaj nowy przychód lub wydatek.
             </DialogDescription>
           </DialogHeader>

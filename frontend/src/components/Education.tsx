@@ -227,7 +227,7 @@ export function Education() {
               </summary>
 
               <div className="pt-3 space-y-3">
-                <p className="text-slate-700 text-sm">{item.definition}</p>
+                <p className="text-slate-700 text-sm mt-2">{item.definition}</p>
                 <ul className="space-y-2" style={{ marginLeft: "2cm" }}>
                   {item.details.map((d) => (
                     <li key={d} className="text-sm text-slate-600 list-disc">
