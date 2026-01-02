@@ -31,17 +31,17 @@ export function Education() {
     },
     {
       title: "Fundusz Awaryjny",
-      description: "Zawsze miej odłożone 3-6 miesięcznych wydatków na nieprzewidziane sytuacje jak utrata pracy czy naprawa samochodu.",
+      description: "Miej odłożone 3-6 miesięcznych wydatków na nieprzewidziane sytuacje, takie jak awaria samochodu czy pilna wizyta lekarska.",
       icon: <WalletCards size={18} />,
     },
     {
       title: "Unikaj Długów",
-      description: "Długi konsumpcyjne (karty kredytowe, pożyczki) są drogie. Jeśli już musisz pożyczyć, wybieraj najniższe oprocentowanie.",
+      description: "Długi konsumpcyjne (karty kredytowe, pożyczki) szybko rosną przez odsetki. Jeśli musisz pożyczyć, wybieraj najniższe oprocentowanie.",
       icon: <Handshake size={18} />,
     },
     {
       title: "Inwestuj Wcześnie",
-      description: "Im wcześniej zaczniesz inwestować, tym więcej zarobisz dzięki procentowi składanemu. Nawet małe kwoty się liczą!",
+      description: "Im wcześniej zaczniesz inwestować, tym więcej możesz zyskać dzięki procentowi składanemu. Nawet małe kwoty mają znaczenie.",
       icon: <TrendingUp size={18} />,
     },
   ],
@@ -57,10 +57,10 @@ export function Education() {
         definition:
           "Obowiązkowa opłata pobierana przez państwo od obywateli i firm. W Polsce najważniejsze podatki to:",
         details: [
-          "PIT (Podatek Dochodowy od Osób Fizycznych) - podatek od zarobków.",
+          "PIT (Podatek Dochodowy od Osób Fizycznych) - podatek od zarobków, rozliczany na podstawie rocznego zeznania podatkowego.",
           "VAT (Podatek od Towarów i Usług) - podatek konsumpcyjny, zwykle 23%.",
-          "CIT (Podatek Dochodowy od Osób Prawnych) - podatek dla firm.",
-          "Podatek od nieruchomości - płacony przez właścicieli mieszkań i domów."
+          "CIT (Podatek Dochodowy od Osób Prawnych) - podatek od dochodów firm, którego wysokość zależy od rodzaju podatnika (9% lub 19%).",
+          "Podatek od nieruchomości - płacony przez właścicieli mieszkań i domów, zależny od lokalizacji i wielkości nieruchomości."
         ],
       },
       {
@@ -69,22 +69,20 @@ export function Education() {
         definition:
           "Plan finansowy określający przewidywane przychody i wydatki w określonym czasie. Budżet pomaga kontrolować finanse.",
         details: [
-          "Budżet osobisty - plan twoich miesięcznych przychodów i wydatków.",
+          "Budżet osobisty - plan miesięcznych przychodów i wydatków.",
           "Budżet państwa - plan finansowy kraju.",
-          "Zasada 50/30/20: 50% na potrzeby, 30% na przyjemności, 20% na oszczędności."
+          "Zasada 50/30/20 - podział dochodów: 50% na potrzeby (czynsz, jedzenie), 30% na przyjemności (rozrywka), 20% na oszczędności i inwestycje."
         ],
       },
       {
         term: "Inwestycja",
         icon: <ChartNoAxesCombined size={18} />,
         definition:
-          "Przeznaczenie pieniędzy na zakup aktywów, które mogą przynieść zysk w przyszłości.",
+          "Przeznaczenie pieniędzy na zakup aktywów w celu osiągnięcia zysku w przyszłości.",
         details: [
           "Akcje - udziały w firmach, kupowane na giełdzie.",
           "Obligacje - pożyczki dla państwa lub firm.",
-          "Nieruchomości - zakup mieszkań lub działek.",
-          "Fundusze inwestycyjne - profesjonalnie zarządzane portfele.",
-          "Lokaty bankowe - bezpieczne oszczędności z niskim zyskiem."
+          "Nieruchomości - zakup mieszkań lub działek."
         ],
       },
       {
@@ -95,8 +93,8 @@ export function Education() {
         details: [
           "Kredyt hipoteczny - na zakup mieszkania/domu (długoterminowy).",
           "Kredyt konsumpcyjny - na dowolny cel (krótkoterminowy).",
-          "Oprocentowanie - koszt pożyczenia pieniędzy.",
-          "RRSO - rzeczywista roczna stopa oprocentowania (prawdziwy koszt kredytu).",
+          "Oprocentowanie - procentowy koszt korzystania z pożyczonych pieniędzy.",
+          "RRSO - wskaźnik pokazujący całkowity koszt kredytu w skali roku, uwzględniający nie tylko odsetki, ale także prowizje i inne opłaty.",
           "Rata - miesięczna spłata kredytu."
         ],
       },
@@ -106,22 +104,24 @@ export function Education() {
         definition:
           "Pieniądze odłożone na przyszłość, niewydane z bieżących dochodów.",
         details: [
-          "Fundusz awaryjny - 3-6 miesięcznych wydatków na nieprzewidziane sytuacje.",
-          "Konto oszczędnościowe - specjalne konto z wyższym oprocentowaniem.",
-          "Lokata terminowa - zablokowanie pieniędzy na określony czas za wyższy zysk.",
-          "Zasada: odłóż minimum 10-20% swoich dochodów."
+          "Fundusz awaryjny - równowartość 3-6 miesięcznych wydatków na nieprzewidziane sytuacje.",
+          "Konto oszczędnościowe - bankowy rachunek oszczędnościowy, który umożliwia odkładanie środków i naliczanie odsetek.",
+          "Lokata terminowa – zamrożenie pieniędzy na czas trwania umowy w zamian za wyższe oprocentowanie.",
+          "Lokaty bankowe – bezpieczne oszczędzanie z łatwym dostępem do pieniędzy i niższym oprocentowaniem."
         ],
       },
       {
         term: "Odsetki",
         icon: <Percent size={18} />,
         definition:
-          "Koszt pożyczenia pieniędzy lub nagroda za ich oszczędzanie.",
+          "Koszt pożyczenia pieniędzy lub dochód z ich oszczędzania.",
         details: [
-          "Odsetki od kredytu - płacisz bankowi za pożyczenie pieniędzy.",
-          "Odsetki od lokaty - bank płaci tobie za przechowanie pieniędzy.",
-          "Stopa procentowa - procent naliczany rocznie.",
-          "Kapitalizacja - doliczanie odsetek do kwoty głównej."
+          "Odsetki od kredytu – kwota należna bankowi za korzystanie z pożyczonych środków.",
+          "Odsetki od lokaty – kwota wypłacana przez bank w zamian za powierzenie środków na określony czas.",
+          "Stopa procentowa – wartość procentowa określająca wysokość naliczanych odsetek w skali roku.",
+          "Kapitalizacja – proces polegający na doliczaniu naliczonych odsetek do kwoty głównej."
+
+
         ],
       },
       {
@@ -130,22 +130,23 @@ export function Education() {
         definition:
           "Wzrost cen towarów i usług w czasie, co oznacza spadek siły nabywczej pieniądza.",
         details: [
-          "Przykład: Jeśli inflacja wynosi 5%, to za rok za 100 zł kupisz mniej niż dziś.",
-          "NBP (Narodowy Bank Polski) stara się utrzymać inflację około 2,5%.",
-          "Wysoka inflacja zmniejsza wartość oszczędności.",
-          "Inwestycje pomagają chronić się przed inflacją."
+          "Przykład: wzrost inflacji sprawia, że z czasem ta sama kwota pieniędzy ma coraz mniejszą siłę nabywczą.",
+          "Stabilna, umiarkowana inflacja jest jednym z głównych celów polityki pieniężnej banku centralnego.",
+          "Przy wysokiej inflacji pieniądze trzymane bez oprocentowania tracą na wartości.",
+          "Inwestowanie może pomóc zachować realną wartość pieniędzy w dłuższym okresie."
+
         ],
       },
       {
         term: "Debet",
         icon: <HandCoins size={18} />,
         definition:
-          "Możliwość wydania większej kwoty niż masz na koncie - krótkoterminowa pożyczka od banku.",
+          "Krótkoterminowe zadłużenie na rachunku bankowym, pozwalające wydać więcej środków niż wynosi dostępne saldo.",
         details: [
           "Też nazywany \"kredytem w koncie.\"",
           "Zazwyczaj ma bardzo wysokie oprocentowanie.",
-          "Używaj tylko w nagłych wypadkach.",
-          "Lepiej unikać i budować fundusz awaryjny."
+          "Rozwiązanie to przeznaczone jest głównie na krótkotrwałe, nagłe potrzeby finansowe.",
+          "Lepszą alternatywą dla debetu jest posiadanie funduszu awaryjnego."
         ],
       },
     ],
@@ -161,7 +162,7 @@ export function Education() {
         <h2 className="text-xl font-semibold" style={{ color: "#000000ff" }}>
           Edukacja Finansowa
         </h2>
-        <p className="text-slate-500">Podstawowe pojęcia finansowe</p>
+        <p className="text-slate-500">Podstawowe pojęcia finansowe i praktyczne porady</p>
       </div>
 
       {/* Tips */}
@@ -255,10 +256,10 @@ export function Education() {
           style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
         >
           <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
-            Minimalna Płaca w Polsce (2025)
+            Minimalna Płaca w Polsce (2026)
           </p>
           <p className="text-slate-600 text-sm mt-1">
-            4300 zł brutto (około 3200 zł netto). To najniższa legalna pensja, którą pracodawca może wypłacić.
+            Minimalne wynagrodzenie w Polsce wynosi 4806 zł brutto (około 3605 zł netto) miesięcznie.
           </p>
         </div>
 
@@ -267,10 +268,22 @@ export function Education() {
           style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
         >
           <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
-            Ulga Podatkowa
+            Kwota wolna od podatku
           </p>
           <p className="text-slate-600 text-sm mt-1">
-            Kwota wolna od podatku to 30 000 zł rocznie. Oznacza to, że do tej kwoty nie płacisz PIT.
+            Kwota wolna od podatku to 30 000 zł rocznie - dochód do tej wysokości nie podlega opodatkowaniu PIT.
+          </p>
+        </div>
+
+        <div
+          className="pl-4 py-2 rounded-r-lg"
+          style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
+        >
+          <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
+            Skala podatkowa PIT (2026)
+          </p>
+          <p className="text-slate-600 text-sm mt-1">
+            Dochody do 120 000 zł rocznie są opodatkowane stawką 12%, a nadwyżka ponad tę kwotę – stawką 32%.
           </p>
         </div>
       </div>
