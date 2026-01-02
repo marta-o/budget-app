@@ -12,9 +12,10 @@ interface DatePickerProps {
   label?: string;
   fromYear?: number;
   toYear?: number;
+  maxDate?: Date;
 }
 
-export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", label, fromYear = 2000, toYear = new Date().getFullYear() }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", label, fromYear = 2000, toYear = new Date().getFullYear(), maxDate }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"day" | "year" | "month" | "customYear">("day");
   const [customYearInput, setCustomYearInput] = useState<string>("");
@@ -22,6 +23,12 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
   const today = useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
   const currentMonthIndex = today.getMonth();
+  
+  // Use maxDate if provided, otherwise use today
+  const disabledAfter = useMemo(() => {
+    if (maxDate) return maxDate;
+    return today;
+  }, [maxDate, today]);
 
   const selected = useMemo(() => {
     if (!value) return undefined;
@@ -255,7 +262,7 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
                 selected: { backgroundColor: "#dec5feff", color: "#1f2937" },
                 today: { color: "#361ea0ff", fontWeight: 600 },
               }}
-              disabled={{ after: today }}
+              disabled={{ after: disabledAfter }}
             />
           )}
         </Popover.Content>

@@ -31,6 +31,12 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
+  // Calculate last day of current month
+  const getLastDayOfMonth = () => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  };
+
   // Filter categories based on selected type (income or expense)
   const visibleCategories = categories.filter((c) => c.type === type);
 
@@ -155,6 +161,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
                 onChange={(v) => setDate(v)}
                 placeholder="Wybierz datę"
                 fromYear={2000}
+                maxDate={getLastDayOfMonth()}
               />
             </div>
 
