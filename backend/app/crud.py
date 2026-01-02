@@ -86,10 +86,8 @@ def get_transactions(
     start: Optional[date] = None,
     end: Optional[date] = None,
     q: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 100
 ) -> List[Dict]:
-    """Retrieve transactions with optional filtering, search, and pagination."""
+    """Retrieve all transactions with optional filtering and search."""
     query = (
         db.query(models.Transaction, models.Category)
         .outerjoin(models.Category, models.Transaction.category_id == models.Category.id)
@@ -106,7 +104,7 @@ def get_transactions(
         like = f"%{q}%"
         query = query.filter(or_(models.Transaction.title.ilike(like), models.Category.name.ilike(like)))
 
-    rows = query.order_by(models.Transaction.date.desc()).offset(skip).limit(limit).all()
+    rows = query.order_by(models.Transaction.date.desc()).all()
 
     return [
         {

@@ -5,9 +5,9 @@ Configures CORS middleware and registers all API routers.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import auth, transactions, categories
+from .routers import auth, transactions, categories, predictions
 
-app = FastAPI()
+app = FastAPI(title="Budget App API", version="1.0.0")
 
 # CORS configuration for frontend development servers
 app.add_middleware(
@@ -26,6 +26,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(categories.router)
+app.include_router(predictions.router)
 
 
 @app.get("/")

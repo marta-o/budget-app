@@ -9,8 +9,17 @@ from datetime import date
 from .. import crud, schemas, models
 from ..database import get_db
 from ..dependencies import get_current_user
+from ..predictor import UserMLPredictor
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
+
+_ml_predictor: Optional[UserMLPredictor] = None
+
+def get_ml_predictor() -> UserMLPredictor:
+    global _ml_predictor
+    if _ml_predictor is None:
+        _ml_predictor = UserMLPredictor()
+    return _ml_predictor
 
 def parse_date(value: Optional[str]) -> Optional[date]:
     """Safely parse ISO date string, returns None if invalid."""
@@ -39,8 +48,6 @@ def list_transactions(
     start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     q: Optional[str] = Query(None, description="Search in title or category name"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
 ):
     """Get all transactions for the authenticated user with optional filters."""
     return crud.get_transactions(
@@ -48,7 +55,7 @@ def list_transactions(
         parse_int(category_id),
         parse_date(start),
         parse_date(end),
-        q, skip, limit
+        q
     )
 
 @router.post("/", response_model=schemas.TransactionOut, status_code=201)
@@ -58,7 +65,16 @@ def add_transaction(
     db: Session = Depends(get_db)
 ):
     """Create a new transaction for the authenticated user."""
-    return crud.create_transaction(db, transaction, user.person_id)
+    new_tx = crud.create_transaction(db, transaction, user.person_id)
+    
+    # Auto-retrain ML model after adding transaction
+    try:
+        predictor = get_ml_predictor()
+        predictor.retrain_user_model(user.person_id)
+    except Exception as e:
+        print(f"Auto-retrain failed for user {user.person_id}: {e}")
+    
+    return new_tx
 
 @router.put("/{tx_id}", response_model=schemas.TransactionOut)
 def update_transaction(

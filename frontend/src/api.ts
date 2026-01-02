@@ -113,3 +113,57 @@ export async function getCategories(token?: string, type?: string) {
   const res = await fetch(`${API_URL}/categories/${query}`, { headers });
   return handleRes(res);
 }
+
+
+// Prediction endpoints
+
+/** Get spending forecast for all categories for a specific month and year */
+export async function getForecastAll(token: string, month: number, year: number) {
+  // Budujemy query string z month i year
+  const query = `?month=${month}&year=${year}`;
+  const res = await fetch(`${API_URL}/predictions/forecast-all${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
+
+/** Get spending forecast for a specific category */
+export async function getForecast(token: string, categoryId: number, months: number = 6) {
+  const res = await fetch(`${API_URL}/predictions/forecast/${categoryId}?months=${months}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
+
+/** Get yearly forecast for a category */
+export async function getYearlyForecast(token: string, categoryId: number) {
+  const res = await fetch(`${API_URL}/predictions/yearly/${categoryId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
+
+/** Get user spending summary */
+export async function getSpendingSummary(token: string) {
+  const res = await fetch(`${API_URL}/predictions/summary`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
+
+/** Get feature importance from ML model */
+export async function getFeatureImportance(token: string) {
+  const res = await fetch(`${API_URL}/predictions/feature-importance`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
+
+/** Force retrain ML model */
+export async function retrainModel(token: string) {
+  const res = await fetch(`${API_URL}/predictions/retrain`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleRes(res);
+}
