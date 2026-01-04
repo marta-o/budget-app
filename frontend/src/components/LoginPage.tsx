@@ -36,8 +36,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [loginSuccess, setLoginSuccess] = useState<string | null>(null);
 
   /**
-   * Handles login form submission.
-   * Calls API and passes token to parent on success.
+   * Submit login form - validate credentials and authenticate user
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +62,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   /**
-   * Handles registration form submission.
-   * Validates inputs and creates new account via API.
+   * Submit registration form - create new user account
+   * Validates required fields and password confirmation
    */
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,12 +115,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "url('/firstBackground.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center" style={{ backgroundImage: "url('/firstBackground.png')" }}>
       <div className="w-full max-w-md space-y-4">
         {!showRegister ? (
           <Card>
             <CardHeader className="space-y-4 text-center">
-              <div className="mx-auto p-4 rounded-2xl w-fit" style={{ backgroundColor: "#dec5feff" }}>
+              <div className="mx-auto p-4 rounded-2xl w-fit" style={{ backgroundColor: "#dec5fe" }}>
                 <Wallet className="w-12 h-12 text-white" />
               </div>
               <div>
@@ -159,7 +158,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   </div>
                 )}
                 {error && <p className="text-sm text-red-600">{error}</p>}
-                <Button type="submit" className="w-full gap-2" style={{ backgroundColor: "#dec5feff", color: "#000000" }} disabled={loading}>
+                <Button type="submit" className="w-full gap-2" style={{ backgroundColor: "#dec5fe", color: "#000000" }} disabled={loading}>
                   <LogIn className="w-4 h-4" />
                   Zaloguj się
                 </Button>
@@ -183,7 +182,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         ) : (
           <Card>
             <CardHeader className="space-y-4 text-center">
-              <div className="mx-auto p-3 rounded-2xl w-fit" style={{ backgroundColor: "#dec5feff" }}>
+              <div className="mx-auto p-3 rounded-2xl w-fit" style={{ backgroundColor: "#dec5fe" }}>
                 <UserPlus className="w-10 h-10 text-black" />
               </div>
               <div>
@@ -262,7 +261,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 {loginSuccess && <p className="text-sm text-green-600">{loginSuccess}</p>}
 
                 <div className="flex gap-2">
-                  <Button type="submit" className="flex-1 gap-2" style={{ backgroundColor: "#dec5feff", color: "#000000" }} disabled={regLoading}>
+                  <Button type="submit" className="flex-1 gap-2" style={{ backgroundColor: "#dec5fe", color: "#000000" }} disabled={regLoading}>
                     Zarejestruj
                   </Button>
                   <Button type="button" variant="ghost" className="gap-2" onClick={() => setShowRegister(false)}>

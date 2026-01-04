@@ -26,7 +26,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
   const [start, setStart] = useState<string>("");
   const [end, setEnd] = useState<string>("");
 
-  // Fetch all transactions for analytics (not just current month)
+  // Fetch all transactions from API for analytics
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
     };
   }, [token]);
 
-  // Use fetched transactions if available, otherwise use props
+  // Use fetched transactions if available from API, otherwise fall back to props
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
 
   // Extract unique years from transactions for year filter dropdown
@@ -60,14 +60,14 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
   // Filter categories based on type filter
   const visibleCategories = type === "all" ? categories : categories.filter((c) => c.type === type);
 
-  // Reset category selection when type filter changes
+  // Reset invalid category selection when type filter changes
   useEffect(() => {
     if (categoryId.length === 0) return;
     const valid = categoryId.filter((id) => visibleCategories.some((c) => String(c.id) === id));
     if (valid.length !== categoryId.length) setCategoryId(valid);
   }, [type, categories]);
 
-  // Filter transactions based on all selected filters.
+  // Filter transactions based on all active filters (type, categories, dates, year)
   const filteredTx = useMemo(() => {
     const s = start ? new Date(start) : null;
     const e = end ? new Date(end) : null;
@@ -85,7 +85,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
     });
   }, [sourceTransactions, type, categoryId, start, end, year, categories]);
 
-  // Calculate totals using category-derived type
+  // Calculate income and expense totals from filtered transactions
   const totalIncome = filteredTx
     .filter((t) => getTransactionType(t, categories) === "income")
     .reduce((s, t) => s + t.amount, 0);
@@ -96,9 +96,9 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
   return (
   <div className="space-y-4">
     <div className="flex flex-col items-center gap-4">
-      <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#dec5feff", border: "2px solid #EEEEEE" }}>
+      <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl border-2 border-slate-200" style={{ backgroundColor: "#dec5fe" }}>
         <div className="flex items-center gap-2">
-          <label className="text-sm" style={{ fontWeight: 700 }}>Rok</label>
+          <label className="text-sm font-bold">Rok</label>
           <div className="w-40">
             <Dropdown
               value={year}
@@ -109,7 +109,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
+          <label className="text-sm font-bold">Typ</label>
           <div className="w-40">
             <Dropdown
               value={type}
@@ -124,7 +124,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm" style={{ fontWeight: 700 }}>Kategoria</label>
+          <label className="text-sm font-bold">Kategoria</label>
           <div className="w-48">
             <Dropdown
               multi
@@ -137,7 +137,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
+          <label className="text-sm font-bold">Od</label>
           <DatePicker
             value={start}
             onChange={(v) => setStart(v)}
@@ -146,7 +146,7 @@ export function Analytics({ transactions, categories, token }: AnalyticsProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
+          <label className="text-sm font-bold">Do</label>
           <DatePicker
             value={end}
             onChange={(v) => setEnd(v)}

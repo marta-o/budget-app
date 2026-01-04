@@ -14,11 +14,11 @@ from . import models, schemas
 # Password Hashing
 
 def get_password_hash(password: str) -> str:
-    """Hash a password using bcrypt with auto-generated salt."""
+    """Hash password using bcrypt with auto-generated salt for secure storage."""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a bcrypt hash. Returns False on any error."""
+    """Verify plain password against bcrypt hash. Returns False on any error (invalid format, mismatch)."""
     if not hashed_password:
         return False
     try:
@@ -56,7 +56,7 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     return db_user
 
 
-# Transaction Operations
+# Transaction database operations (create, read, update, delete)
 
 def create_transaction(db: Session, transaction: schemas.TransactionCreate, person_id: int) -> models.Transaction:
     """Create a new transaction for the specified person."""
@@ -167,7 +167,7 @@ def delete_transaction(db: Session, tx_id: int, person_id: int) -> bool:
     return True
 
 
-# Category Operations
+# Category retrieval operations
 
 def get_categories(db: Session, type_filter: Optional[str] = None) -> List[models.Category]:
     """Get all categories, optionally filtered by type (expense/income)."""

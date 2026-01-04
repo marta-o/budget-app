@@ -1,5 +1,5 @@
 /**
- * CategoryBreakdown - Pie chart showing expense distribution by category.
+ * CategoryBreakdown - Pie chart displaying expense distribution by category.
  */
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
@@ -12,18 +12,18 @@ interface CategoryBreakdownProps {
 
 // Color palette for pie chart segments
 const COLORS = [
-  "#f37f88ff", 
-  "#eeac72ff", 
-  "#75e6f5ff", 
-  "#6fd4afff", 
-  "#72b3fdff", 
-  "#a487f1ff", 
-  "#f18dc4ff", 
-  "#dbc232ff", 
+  "#f37f88ff",  // red
+  "#eeac72ff",  // orange
+  "#75e6f5ff",  // cyan
+  "#6fd4afff",  // mint
+  "#72b3fdff",  // blue
+  "#a487f1ff",  // purple
+  "#f18dc4ff",  // pink
+  "#dbc232ff",  // yellow
 ];
 
 export function CategoryBreakdown({ transactions, categories }: CategoryBreakdownProps) {
-  // Group expenses by category
+  // Group all expenses by category and sum amounts
   const expensesByCategory = transactions
     .filter((t) => getTransactionType(t, categories) === "expense")
     .reduce((acc, transaction) => {
@@ -34,10 +34,10 @@ export function CategoryBreakdown({ transactions, categories }: CategoryBreakdow
       return acc;
     }, {} as Record<string, number>);
 
-  // Calculate total expenses for percentage calculation
+  // Calculate total for percentage calculation
   const totalExpenses = Object.values(expensesByCategory).reduce((sum, v) => sum + v, 0);
 
-  // Transform data for pie chart and sort by percentage descending
+  // Transform and sort by percentage (largest first)
   const chartData = Object.entries(expensesByCategory)
     .map(([name, value]) => ({
       name,
@@ -49,7 +49,7 @@ export function CategoryBreakdown({ transactions, categories }: CategoryBreakdow
   return (
     <Card>
       <CardHeader>
-        <CardTitle style={{ fontSize: '0.5cm' }}>Podział Wydatków</CardTitle>
+        <CardTitle className="text-base">Podział Wydatków</CardTitle>
         <CardDescription>Wydatki według kategorii</CardDescription>
       </CardHeader>
       <CardContent>

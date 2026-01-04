@@ -1,12 +1,18 @@
 """
-ML prediction module for budget forecasting.
-Uses Gradient Boosting with focused feature set.
+ML prediction module for budget forecasting using Gradient Boosting Regressor.
+Forecasts future spending per category with confidence scores and trend analysis.
 
-Features used (simplified for effectiveness):
-- Historical: lag_1, lag_2, lag_3 (previous months spending)
-- Trend: pct_change (percentage change), trend_direction
-- Volatility: cv (coefficient of variation)
-- Context: relative_to_avg (spending vs category average)
+**Features used (7 high-signal features):**
+- category_encoded: Identifies which category (model learns spending patterns per category)
+- month_num: Month number 1-12 (captures seasonality, e.g., higher December spending)
+- lag_1, lag_2, lag_3: Spending from previous 3 months (core predictive signals)
+- pct_change: Month-over-month percentage change, clipped to [-2, 2] (trend direction)
+- cv: Coefficient of variation (volatility indicator, used for confidence estimation)
+
+**Model requirements:**
+- Minimum 20 transactions across expense categories to enable ML
+- Minimum 3 months of transaction history
+- Falls back to statistical prediction (averages) if ML requirements not met
 """
 import sqlite3
 import pandas as pd
@@ -23,13 +29,14 @@ from .config import settings
 
 class UserMLPredictor:
     """
-    ML predictor for budget forecasting using Gradient Boosting.
-    Simplified feature set focused on what actually predicts spending.
-    Requires minimum 30 transactions for ML, otherwise uses statistics.
+    ML predictor for budget forecasting using Gradient Boosting Regressor.
+    
+    Uses a simplified 7-feature set optimized for small personal finance datasets.
+    Requires minimum 20 transactions for ML, otherwise falls back to statistical averages.
     """
     
-    MIN_TRANSACTIONS_FOR_ML = 30
-    MIN_MONTHS_FOR_ML = 4
+    MIN_TRANSACTIONS_FOR_ML = 20
+    MIN_MONTHS_FOR_ML = 3
     
     def __init__(self, db_path: str = None):
         if db_path is None:
@@ -39,7 +46,7 @@ class UserMLPredictor:
         self._user_models: Dict[int, dict] = {}
     
     def _get_user_transactions(self, person_id: int) -> pd.DataFrame:
-        """Fetch user's expense transactions."""
+        """Fetch all expense transactions for a user from database."""
         conn = sqlite3.connect(self.db_path)
         query = """
         SELECT t.id, t.date, t.amount, c.name as category
@@ -58,7 +65,8 @@ class UserMLPredictor:
         return df
     
     def _aggregate_to_monthly(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Aggregate transactions to monthly totals per category."""
+        """Aggregate daily transactions to monthly totals per category. 
+        Fills missing months with zero to ensure continuous time series."""
         if df.empty:
             return pd.DataFrame()
         
@@ -84,49 +92,39 @@ class UserMLPredictor:
             ).fillna({"amount": 0, "tx_count": 0}).sort_values(["category", "year", "month"])
     
     def _create_features(self, monthly_df: pd.DataFrame) -> pd.DataFrame:
-        """Create focused ML features - only what actually works."""
+        """Create ML features from monthly time series data."""
         df = monthly_df.copy()
         
-        # === MONTH (simple, keeps seasonal patterns) ===
-        df["month_num"] = df["month"]  # 1-12, model learns seasonal patterns
-        
-        # === HISTORICAL LAGS (core predictors) ===
+        # Seasonality: month number 1-12 (model learns patterns like higher December spending)
+        df["month_num"] = df["month"]
+
+        # Historical lags: previous 3 months spending (strongest predictive signals)
         df["lag_1"] = df.groupby("category")["amount"].shift(1)
         df["lag_2"] = df.groupby("category")["amount"].shift(2)
         df["lag_3"] = df.groupby("category")["amount"].shift(3)
         
-        # === TREND (percentage change - normalized, comparable across categories) ===
-        # How much did spending change from month to month?
+        # Trend: percentage change month-over-month, clipped to [-2, 2] to limit outliers
         df["pct_change"] = df.groupby("category")["amount"].pct_change(1)
         df["pct_change"] = df["pct_change"].replace([np.inf, -np.inf], 0).fillna(0).clip(-2, 2)
         
-        # Trend direction: -1 (decreasing), 0 (stable), 1 (increasing)
-        df["trend_direction"] = np.sign(df["lag_1"] - df["lag_2"]).fillna(0)
-        
-        # === VOLATILITY (how stable is spending in this category?) ===
+        # Volatility: coefficient of variation from 3-month rolling window
         rolling_mean = df.groupby("category")["amount"].transform(
             lambda x: x.rolling(window=3, min_periods=1).mean())
         rolling_std = df.groupby("category")["amount"].transform(
             lambda x: x.rolling(window=3, min_periods=2).std()).fillna(0)
         
-        # Coefficient of variation - normalized measure of volatility
+        # CV = std/mean, clipped to [0, 3] - used for confidence estimation
         df["cv"] = (rolling_std / rolling_mean.replace(0, 1)).fillna(0).clip(0, 3)
         
-        # === CATEGORY CONTEXT ===
         cat_stats = df.groupby("category")["amount"].agg(["mean", "std"]).reset_index()
         cat_stats.columns = ["category", "cat_avg", "cat_std"]
         cat_stats["cat_std"] = cat_stats["cat_std"].fillna(0)
         df = df.merge(cat_stats, on="category", how="left")
         
-        # How does recent spending compare to category average? avoid division by zero
-        eps = 1e-6
-        safe_cat_avg = df["cat_avg"].replace(0, eps)
-        df["relative_to_avg"] = (df["lag_1"] / safe_cat_avg).fillna(1).clip(0, 5)
-        
         return df
     
     def _train_model(self, person_id: int) -> Optional[dict]:
-        """Train Gradient Boosting model on user's data."""
+        """Train Gradient Boosting model on user's transaction history. Returns model dict or None if data insufficient."""
         df = self._get_user_transactions(person_id)
         
         if len(df) < self.MIN_TRANSACTIONS_FOR_ML:
@@ -147,31 +145,26 @@ class UserMLPredictor:
         if len(featured_df) < 6:
             return None
         
-        # Simplified, effective feature set (9 features)
+        # Simplified, high-signal feature set (7 features)
         feature_cols = [
-            "category_encoded",
-            # Temporal (simple but effective)
-            "month_num",
-            # Historical (core predictors - these carry most signal)
-            "lag_1", "lag_2", "lag_3",
-            # Trend (normalized, comparable across categories)
-            "pct_change", "trend_direction",
-            # Volatility & context
-            "cv", "relative_to_avg"
+            "category_encoded",  # Category identification
+            "month_num",          # Seasonality
+            "lag_1", "lag_2", "lag_3",  # Historical spending (core signals)
+            "pct_change",         # Trend direction (normalized)
+            "cv"                  # Volatility (confidence indicator)
         ]
         
         X = featured_df[feature_cols].fillna(0)
         y = featured_df["amount"]
         
-        # Gradient Boosting with simpler config for smaller feature set
         model = GradientBoostingRegressor(
             n_estimators=100,
             max_depth=4,
             learning_rate=0.1,
-            min_samples_split=3,
-            min_samples_leaf=2,
+            min_samples_split=4,
+            min_samples_leaf=3,
             subsample=0.8,
-            random_state=42
+            random_state=10
         )
         model.fit(X, y)
         
@@ -183,12 +176,12 @@ class UserMLPredictor:
             "cat_avg": "first", "cat_std": "first"
         }).reset_index()
         
-        # Store lag info for predictions
+        # Store latest lags for making predictions on new data
         latest_lags = featured_df.sort_values(["category", "year", "month"]).groupby("category").last()[
             ["lag_1", "lag_2", "lag_3", "pct_change", "cv"]
         ].reset_index()
         
-        # Human-readable feature names for UI
+        # Human-readable feature names for UI (Polish)
         feature_names_pl = {
             "category_encoded": "Kategoria",
             "month_num": "Miesiąc",
@@ -196,9 +189,7 @@ class UserMLPredictor:
             "lag_2": "Wydatek 2 miesiące temu",
             "lag_3": "Wydatek 3 miesiące temu",
             "pct_change": "Zmiana procentowa",
-            "trend_direction": "Kierunek trendu",
-            "cv": "Zmienność wydatków",
-            "relative_to_avg": "Względem średniej"
+            "cv": "Zmienność wydatków"
         }
         
         feature_importance_raw = dict(zip(feature_cols, model.feature_importances_))
@@ -221,6 +212,7 @@ class UserMLPredictor:
         }
     
     def _get_or_train_model(self, person_id: int) -> Optional[dict]:
+        """Get cached model or train new one if not exists."""
         if person_id not in self._user_models:
             model_data = self._train_model(person_id)
             if model_data:
@@ -255,36 +247,30 @@ class UserMLPredictor:
             lag_1 = lag_2 = lag_3 = cat_avg
             pct_change = cv = 0
         
-        # If category historically almost constant, bypass ML and return last observed value exactly
+        # If category has almost constant spending, bypass ML and return last observed value
         cat_std = cat_row["cat_std"].values[0] if ("cat_std" in cat_row.columns and len(cat_row) > 0) else 0
         if (cat_std is not None and cat_std < 1e-3) or (abs(lag_1 - lag_2) < 1e-6 and abs(lag_2 - lag_3) < 1e-6):
-            # high confidence, return exact last observed (or category average fallback)
+            # High confidence for constant categories, return exact last observed value
             return max(0, round(float(lag_1), 2)), "high"
 
-        # Calculate derived features
+        # Normalize features to model expectations
         pct_change = np.clip(pct_change, -2, 2)
-        trend_direction = np.sign(lag_1 - lag_2) if lag_2 != 0 else 0
         cv = np.clip(cv, 0, 3)
-        relative_to_avg = (lag_1 / cat_avg) if cat_avg > 0 else 1
-        relative_to_avg = np.clip(relative_to_avg, 0, 5)
         
+        # Build feature vector for prediction
         X = pd.DataFrame([{
             "category_encoded": cat_encoded,
-            "month_num": month,  # Added month back
+            "month_num": month,
             "lag_1": lag_1,
             "lag_2": lag_2,
             "lag_3": lag_3,
             "pct_change": pct_change,
-            "trend_direction": trend_direction,
-            "cv": cv,
-            "relative_to_avg": relative_to_avg
+            "cv": cv
         }])
         
-        # Predict
         prediction = model.predict(X)[0]
         
         # Confidence based on coefficient of variation
-        # Low cv = stable spending = high confidence
         if cv < 0.3:
             confidence = "high"
         elif cv < 0.6:
@@ -333,7 +319,7 @@ class UserMLPredictor:
             if result:
                 prediction, confidence = result
                 return {
-                    "estimated_amount": prediction, "method": "random_forest",
+                    "estimated_amount": prediction, "method": "gradient_boosting",
                     "confidence": confidence, "has_data": True, "is_ml": True,
                     "model_metrics": model_data["metrics"]
                 }
@@ -352,7 +338,7 @@ class UserMLPredictor:
 
         predictions = []
 
-        # Determine if target month is in the future relative to now
+        # Determine if target month is in the future relative to current date
         now = datetime.now()
         if year is None:
             year = now.year
@@ -360,10 +346,10 @@ class UserMLPredictor:
 
         for cat_id, cat_name in categories:
             if months_diff <= 0:
-                # past or current month -> direct prediction
+                # Past or current month -> direct single-step prediction
                 pred = self.predict_for_month(person_id, cat_name, month)
             else:
-                # future -> run recursive multi-step forecast
+                # Future month -> run recursive multi-step forecast
                 future_sequence = self.predict_next_months(person_id, cat_name, months_ahead=months_diff)
                 target_pred = next((p for p in future_sequence if p["month"] == month and p["year"] == year), None)
                 if target_pred:
@@ -377,11 +363,14 @@ class UserMLPredictor:
         return predictions
     
     def predict_next_months(self, person_id: int, category_name: str, months_ahead: int = 12) -> List[Dict]:
-        """Predict spending for next N months."""
+        """
+        Predict spending for next N months using recursive multi-step forecasting.
+        Each prediction uses previous predictions as lag features (walk-forward simulation).
+        """
         current_date = datetime.now()
         predictions = []
 
-        # prepare initial lags/state for recursive forecasting
+        # Initialize lag state from latest training data for recursive forecasting
         model_data = self._get_or_train_model(person_id)
         current_lags = {"lag_1": 0, "lag_2": 0, "lag_3": 0, "pct_change": 0, "cv": 0}
         if model_data and category_name in model_data["label_encoder"].classes_:
@@ -401,15 +390,15 @@ class UserMLPredictor:
                 avg = cat_row["cat_avg"].values[0]
                 current_lags = {"lag_1": avg, "lag_2": avg, "lag_3": avg, "pct_change": 0, "cv": 0}
 
-        # simulate months 1..months_ahead (1 = next month)
+        # Simulate months 1..months_ahead (1 = next month) with walk-forward lag updates
         for i in range(1, max(0, months_ahead) + 1):
             future_month = ((current_date.month - 1 + i) % 12) + 1
             future_year = current_date.year + (current_date.month - 1 + i) // 12
 
             if model_data and category_name in model_data["label_encoder"].classes_:
-                # use ML with override lags (walk-forward)
+                # Use ML model with walk-forward lag simulation
                 pred_val, conf = self._predict_with_ml(model_data, category_name, future_month)
-                # if model returned None, fallback to stats
+                # If model returned None, fallback to statistics
                 if pred_val is None:
                     stats = self._predict_with_statistics(person_id, category_name, future_month)
                     pred_val = stats["estimated_amount"]
@@ -420,7 +409,7 @@ class UserMLPredictor:
                     has_data = True
                     is_ml = True
 
-                # update lags for next iteration
+                # Update lags for next iteration (walk-forward)
                 old_lag_1 = current_lags.get("lag_1", 0) or 0
                 new_pct_change = 0
                 if old_lag_1 and old_lag_1 > 0:
@@ -564,5 +553,3 @@ class UserMLPredictor:
             return {"importance": model_data["feature_importance"]}
         return None
 
-
-UserPredictor = UserMLPredictor

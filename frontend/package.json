@@ -1,5 +1,5 @@
 {
-      "name": "Budget Management App",
+      "name": "budget-management-app",
       "version": "0.1.0",
       "private": true,
       "dependencies": {

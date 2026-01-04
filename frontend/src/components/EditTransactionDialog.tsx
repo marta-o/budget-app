@@ -4,7 +4,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { DatePicker } from "./ui/calendarview";
-import { Dropdown } from './ui/dropdown';import {
+import { Dropdown } from "./ui/dropdown";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -36,16 +37,10 @@ export function EditTransactionDialog({
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Calculate last day of current month
-  const getLastDayOfMonth = () => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  };
-
   // Filter categories based on selected type filter
   const visibleCategories = categories.filter((c) => c.type === type);
 
-  // Populate form fields when transaction changes.
+  // Load transaction data into form when transaction prop changes or categories update
   useEffect(() => {
     if (!transaction) {
       setTitle("");
@@ -77,14 +72,14 @@ export function EditTransactionDialog({
     }
   }, [transaction, categories]);
 
-  // Reset categoryId when type filter changes and current category is no longer in the visible categories list.
+  // Reset categoryId when type changes and current category no longer matches filter
   useEffect(() => {
     if (categoryId !== "" && !visibleCategories.some((c) => c.id === categoryId)) {
       setCategoryId("");
     }
   }, [type, categories, categoryId, visibleCategories]);
 
-  // Submit the edited transaction. 
+  // Submit edited transaction and close dialog
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!transaction) return;
@@ -187,7 +182,6 @@ export function EditTransactionDialog({
               onChange={(v) => setDate(v)}
               placeholder="Wybierz datę"
               fromYear={2000}
-              maxDate={getLastDayOfMonth()}
             />
           </div>
 
@@ -195,8 +189,8 @@ export function EditTransactionDialog({
             <DialogClose asChild>
               <Button
                 variant="outline"
-                className="border-0 !bg-[#ac85e0ff] !text-black"
-                style={{ backgroundColor: "#caa5fcff", color: "#000000" }}
+                className="border-0"
+                style={{ backgroundColor: "#caa5fc", color: "#000000" }}
                 type="button"
               >
                 Anuluj
@@ -205,8 +199,7 @@ export function EditTransactionDialog({
   
             <Button
               type="submit"
-              className="!bg-[#ffffffff] !text-black"
-              style={{ backgroundColor: "#ffffffff", color: "#000000" }}
+              style={{ backgroundColor: "#ffffff", color: "#000000" }}
             >
               Zapisz zmiany
             </Button>

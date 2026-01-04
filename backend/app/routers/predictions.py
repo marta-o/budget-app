@@ -24,43 +24,6 @@ def get_predictor() -> UserMLPredictor:
     return _predictor
 
 
-@router.get("/forecast/{category_id}")
-async def get_forecast_for_category(
-    category_id: int,
-    months: int = Query(default=12, ge=1, le=12),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get ML-based spending forecast for a specific category."""
-    predictor = get_predictor()
-    
-    category = db.query(Category).filter(Category.id == category_id).first()
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    if category.type != "expense":
-        raise HTTPException(status_code=400, detail="Predictions available only for expenses")
-    
-    forecast = predictor.predict_next_months(
-        person_id=current_user.person_id,
-        category_name=category.name,
-        months_ahead=months
-    )
-    
-    stats = predictor.get_category_stats(current_user.person_id, category.name)
-    
-    return {
-        "user_id": current_user.person_id,
-        "category": category.name,
-        "category_id": category_id,
-        "has_data": stats["has_data"],
-        "transaction_count": stats["count"],
-        "category_average": stats["average"],
-        "trend_direction": stats["trend_direction"],
-        "forecast": forecast
-    }
-
-
 @router.get("/forecast-all")
 async def get_forecast_all_categories(
     month: int = Query(..., ge=1, le=12),
@@ -92,7 +55,6 @@ async def get_forecast_all_categories(
             if pred.get("has_data"):
                 data_count += 1
             
-            # Get trend info for this category
             cat_stats = predictor.get_category_stats(current_user.person_id, cat_name)
             
             result.append({
@@ -103,9 +65,8 @@ async def get_forecast_all_categories(
                 "confidence": pred.get("confidence", "none"),
                 "method": pred.get("method", "no_data"),
                 "is_ml": pred.get("is_ml", False),
-                # Trend info
                 "trend_direction": cat_stats.get("trend_direction", "none"),
-                "trend_percent": cat_stats.get("trend"),  # percentage change
+                "trend_percent": cat_stats.get("trend"),
                 "monthly_average": cat_stats.get("monthly_average", 0)
             })
     
@@ -153,52 +114,6 @@ async def get_forecast_all_categories(
     }
 
 
-@router.get("/yearly/{category_id}")
-async def get_yearly_forecast(
-    category_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get 12-month ML forecast for a category."""
-    predictor = get_predictor()
-    
-    category = db.query(Category).filter(Category.id == category_id).first()
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    monthly_predictions = []
-    yearly_total = 0
-    
-    for month in range(1, 13):
-        pred = predictor.predict_for_month(
-            person_id=current_user.person_id,
-            category_name=category.name,
-            month=month
-        )
-        
-        monthly_predictions.append({
-            "month": month,
-            "estimated_amount": pred["estimated_amount"],
-            "has_data": pred.get("has_data", False),
-            "confidence": pred.get("confidence", "none"),
-            "is_ml": pred.get("is_ml", False)
-        })
-        yearly_total += pred["estimated_amount"]
-    
-    stats = predictor.get_category_stats(current_user.person_id, category.name)
-    
-    return {
-        "user_id": current_user.person_id,
-        "category_id": category_id,
-        "category": category.name,
-        "has_data": stats["has_data"],
-        "transaction_count": stats["count"],
-        "monthly_predictions": monthly_predictions,
-        "yearly_total": round(yearly_total, 2),
-        "monthly_average": round(yearly_total / 12, 2)
-    }
-
-
 @router.get("/summary")
 async def get_user_spending_summary(
     current_user: User = Depends(get_current_user)
@@ -217,31 +132,6 @@ async def retrain_user_model(
     predictor = get_predictor()
     result = predictor.retrain_user_model(current_user.person_id)
     return {"user_id": current_user.person_id, **result}
-
-
-@router.get("/category-stats/{category_id}")
-async def get_category_statistics(
-    category_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get detailed statistics for a category."""
-    predictor = get_predictor()
-    
-    category = db.query(Category).filter(Category.id == category_id).first()
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    stats = predictor.get_category_stats(current_user.person_id, category.name)
-    return {"user_id": current_user.person_id, "category_id": category_id, 
-            "category": category.name, **stats}
-
-
-@router.get("/categories")
-async def get_available_prediction_categories(db: Session = Depends(get_db)):
-    """Get list of expense categories available for prediction."""
-    categories = db.query(Category).filter(Category.type == "expense").all()
-    return {"categories": [{"id": c.id, "name": c.name} for c in categories]}
 
 
 @router.get("/feature-importance")

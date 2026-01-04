@@ -37,8 +37,7 @@ export function DeleteTransactionDialog({ open, onOpenChange, onConfirm }: Delet
             <Button
               variant="ghost"
               type="button"
-              className="!bg-[#ac85e0ff] !text-black"
-              style={{ backgroundColor: "#caa5fcff", color: "#000000" }}
+              style={{ backgroundColor: "#caa5fc", color: "#000000" }}
             >
               Anuluj
             </Button>
@@ -46,7 +45,6 @@ export function DeleteTransactionDialog({ open, onOpenChange, onConfirm }: Delet
           <Button
             variant="destructive"
             type="button"
-            className="!bg-white !text-black"
             style={{ backgroundColor: "#ffffff", color: "#000000" }}
             onClick={() => {
               onConfirm();

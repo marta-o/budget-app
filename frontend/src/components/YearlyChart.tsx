@@ -15,10 +15,10 @@ interface YearlyChartProps {
 }
 
 export function YearlyChart({ transactions, categories, year }: YearlyChartProps) {
-  // Polish month abbreviations
+  // Polish month abbreviations for chart labels
   const monthNames = ["Sty", "Lut", "Mar", "Kwi", "Maj", "Cze", "Lip", "Sie", "Wrz", "Paź", "Lis", "Gru"];
 
-  // Chart for a specific year
+  // Display for a specific year - aggregate transactions by month
   if (year) {
     const monthlyData = transactions
       .filter((t) => new Date(t.date).getFullYear() === year)
@@ -41,15 +41,15 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
     return (
       <Card>
         <CardHeader>
-          <CardTitle style={{ fontSize: "0.5cm" }}>Przegląd {year}</CardTitle>
+          <CardTitle className="text-base">Przegląd {year}</CardTitle>
           <CardDescription>Porównanie miesięczne</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
-              <YAxis tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#ac85e0" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#ac85e0" />
               <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e6e0ff", borderRadius: "8px" }} />
               <Legend wrapperStyle={{ paddingTop: 8 }} />
               <Bar dataKey="income" fill="#6fd4afff" name="Przychody" radius={[6, 6, 0, 0]} />
@@ -61,7 +61,7 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
     );
   }
 
-  // Calculate average across all years when no specific year is selected
+  // No specific year selected - show average monthly data across all years for trend analysis
   const yearsSet = new Set<number>();
   transactions.forEach((t) => yearsSet.add(new Date(t.date).getFullYear()));
   const yearsCount = yearsSet.size || 1;
@@ -85,15 +85,15 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
   return (
     <Card>
       <CardHeader> 
-        <CardTitle style={{ fontSize: "0.5cm" }}>Średnie miesięczne (wszystkie lata)</CardTitle>
+        <CardTitle className="text-base">Średnie miesięczne (wszystkie lata)</CardTitle>
         <CardDescription>Średnia przychodów i wydatków na miesiąc</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#efe6ff" />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
-            <YAxis tick={{ fontSize: 12 }} stroke="#ac85e0ff" />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#ac85e0" />
+            <YAxis tick={{ fontSize: 12 }} stroke="#ac85e0" />
             <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e6e0ff", borderRadius: "8px" }} />
             <Legend wrapperStyle={{ paddingTop: 8 }} />
             <Bar dataKey="income" fill="#6fd4afff" name="Średnie przychody" radius={[6, 6, 0, 0]} />

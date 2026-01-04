@@ -4,9 +4,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Transaction, Category, getTransactionType } from "../App";
 import { getTransactions, getForecastAll, getFeatureImportance, getSpendingSummary } from "../api";
-import { Dropdown } from "./ui/dropdown";
-import { Button } from "./ui/button";
-import { DatePicker } from "./ui/calendarview";
 
 interface PlanningProps {
   transactions: Transaction[];
@@ -43,71 +40,131 @@ interface ForecastResponse {
   total_categories: number;
 }
 
+const MONTH_NAMES = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
+                      "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
+
+// Generic async fetch hook to eliminate useEffect boilerplate
+function useFetch<T>(
+  token: string | undefined,
+  fetchFn: (token: string) => Promise<T>,
+  deps: any[] = []
+) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    let mounted = true;
+    setLoading(true);
+    
+    (async () => {
+      try {
+        const result = await fetchFn(token);
+        if (mounted) setData(result);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        if (mounted) setData(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [token, ...deps]);
+
+  return { data, loading };
+}
+
+// Helper function: Get CSS color class based on spending volatility level
+function getVolatilityColor(volatility: string): string {
+  switch (volatility) {
+    case 'stabilne': return 'text-emerald-600';
+    case 'zmienne': return 'text-orange-600';
+    case 'mocno_zmienne': return 'text-red-600';
+    default: return 'text-gray-600';
+  }
+}
+
+// Helper function: Format volatility level with visual symbol and text
+function formatVolatility(volatility: string): string {
+  switch (volatility) {
+    case 'stabilne': return '◆ Stabilne';
+    case 'zmienne': return '◇ Zmienne';
+    case 'mocno_zmienne': return '◇ Mocno zmienne';
+    default: return 'Nieznane';
+  }
+}
+
 export function Planning({ transactions, categories, token }: PlanningProps) {
-  // Filter state
-  const [year, setYear] = useState<string>(String(new Date().getFullYear()));
-  const [type, setType] = useState<"all" | "income" | "expense">("all");
-  const [categoryId, setCategoryId] = useState<string[]>([]);
-  const [start, setStart] = useState<string>("");
-  const [end, setEnd] = useState<string>("");
+  // Fetch all transactions for analysis
+  const { data: allTransactions } = useFetch(
+    token,
+    (token) => getTransactions(token),
+    []
+  );
 
-  // Fetch all transactions for planning
-  const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
+  // Fetch ML model feature importance
+  const { data: featureImportance, loading: loadingFeatures } = useFetch(
+    token,
+    async (token) => {
+      const res = await getFeatureImportance(token);
+      if (!res.importance || Object.keys(res.importance).length === 0) return null;
+      return Object.entries(res.importance)
+        .map(([name, value]) => ({ name, importance: value as number }))
+        .sort((a, b) => b.importance - a.importance);
+    },
+    []
+  );
 
-  // Current month predictions (with actual comparison)
+  // Fetch ML model metrics (quality indicators)
+  const { data: modelMetrics, loading: loadingMetrics } = useFetch(
+    token,
+    async (token) => {
+      const res = await getSpendingSummary(token);
+      return res.model_metrics || null;
+    },
+    []
+  );
+
+  // Current/future month predictions need manual state (depend on selectedPeriod)
   const [currentMonthPredictions, setCurrentMonthPredictions] = useState<ForecastResponse | null>(null);
   const [loadingCurrentMonth, setLoadingCurrentMonth] = useState(false);
-
-  // Future month predictions
   const [predictions, setPredictions] = useState<ForecastResponse | null>(null);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
-  
-  // Feature importance state
-  const [featureImportance, setFeatureImportance] = useState<Array<{name: string; importance: number}> | null>(null);
-  const [loadingFeatures, setLoadingFeatures] = useState(false);
-  
-  // Model metrics state
-  const [modelMetrics, setModelMetrics] = useState<{mae: number; r2: number; training_months: number; training_samples: number} | null>(null);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
-  
-  // Generate next 12 months starting from NEXT month (not current)
+
+  // Generate next 12 months for forecast selection
   const futureMonths = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
-                        "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
     
-    // Start from next month
     return Array.from({ length: 12 }).map((_, idx) => {
       const monthIdx = (currentMonth + 1 + idx) % 12;
       const yearOffset = Math.floor((currentMonth + 1 + idx) / 12);
       const yr = currentYear + yearOffset;
       return {
         value: `${monthIdx + 1}-${yr}`,
-        label: `${monthNames[monthIdx]} ${yr}`,
+        label: `${MONTH_NAMES[monthIdx]} ${yr}`,
         month: monthIdx + 1,
         year: yr
       };
     });
   }, []);
 
-  // Current month info
+  // Current month label and date info for display and API calls
   const currentMonthInfo = useMemo(() => {
     const now = new Date();
-    const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
-                        "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
     return {
       month: now.getMonth() + 1,
       year: now.getFullYear(),
-      label: `${monthNames[now.getMonth()]} ${now.getFullYear()}`
+      label: `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`
     };
   }, []);
   
-  // Selected prediction period (combined month+year)
+  // Selected forecast period from dropdown
   const [selectedPeriod, setSelectedPeriod] = useState<string>(futureMonths[0]?.value || "");
   
-  // Parse selected period to month and year
+  // Parse selected period to extract month and year numbers
   const predictionMonth = useMemo(() => {
     const [m] = selectedPeriod.split("-");
     return Number(m) || new Date().getMonth() + 1;
@@ -118,79 +175,10 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     return Number(y) || new Date().getFullYear();
   }, [selectedPeriod]);
 
-  // Month formatter for labels
   const monthFormatter = useMemo(
     () => new Intl.DateTimeFormat("pl-PL", { month: "long" }),
     []
   );
-
-  // Fetch transactions
-  useEffect(() => {
-    let mounted = true;
-    if (!token) return;
-    (async () => {
-      try {
-        const res = await getTransactions(token);
-        if (mounted) setAllTransactions(res || []);
-      } catch {
-        if (mounted) setAllTransactions([]);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
-
-  // Fetch feature importance
-  useEffect(() => {
-    let mounted = true;
-    if (!token) return;
-    
-    setLoadingFeatures(true);
-    (async () => {
-      try {
-        const res = await getFeatureImportance(token);
-        if (mounted && res.importance && Object.keys(res.importance).length > 0) {
-          const features = Object.entries(res.importance)
-            .map(([name, value]) => ({ name, importance: value as number }))
-            .sort((a, b) => b.importance - a.importance);
-          setFeatureImportance(features);
-        }
-      } catch (err) {
-        console.error("Failed to load feature importance:", err);
-        if (mounted) setFeatureImportance(null);
-      } finally {
-        if (mounted) setLoadingFeatures(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
-
-  // Fetch model metrics
-  useEffect(() => {
-    let mounted = true;
-    if (!token) return;
-    
-    setLoadingMetrics(true);
-    (async () => {
-      try {
-        const res = await getSpendingSummary(token);
-        if (mounted && res.model_metrics) {
-          setModelMetrics(res.model_metrics);
-        }
-      } catch (err) {
-        console.error("Failed to load model metrics:", err);
-        if (mounted) setModelMetrics(null);
-      } finally {
-        if (mounted) setLoadingMetrics(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
 
   // Fetch current month predictions (with actual spending comparison)
   useEffect(() => {
@@ -214,7 +202,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     };
   }, [token, currentMonthInfo.month, currentMonthInfo.year]);
 
-  // Fetch future month predictions
+  // Fetch future month predictions based on selected period
   useEffect(() => {
     let mounted = true;
     if (!token) return;
@@ -239,13 +227,13 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
   // Use fetched transactions if available
   const sourceTransactions = token ? (allTransactions ?? transactions) : transactions;
 
-  // Last six months (most recent first) - start from PREVIOUS month
+  // Last 6 months of expenses (most recent first) for comparison card
   const lastSixMonths = useMemo(() => {
     const now = new Date();
     return Array.from({ length: 6 }).map((_, idx) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - 1 - idx, 1); // previous month is idx=0
+      const date = new Date(now.getFullYear(), now.getMonth() - 1 - idx, 1);
       const labelRaw = monthFormatter.format(date);
-      const shortLabel = labelRaw.slice(0, 3); // short month name to save space
+      const shortLabel = labelRaw.slice(0, 3);
       return {
         month: date.getMonth(),
         year: date.getFullYear(),
@@ -255,62 +243,41 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     });
   }, [monthFormatter]);
 
-  // Extract unique years from transactions for year filter dropdown
-  const years = useMemo(() => {
-    const set = new Set<number>();
-    sourceTransactions.forEach((t) => set.add(new Date(t.date).getFullYear()));
-    const arr = Array.from(set).sort((a, b) => b - a);
-    if (arr.length === 0) arr.push(new Date().getFullYear());
-    return arr;
-  }, [sourceTransactions]);
-
-  // Filter categories based on type filter
-  const visibleCategories = type === "all" ? categories : categories.filter((c) => c.type === type);
-
-  // Stable ordered list of expense categories (used throughout for consistent ordering)
+  // Stable expense category list (sorted alphabetically, 'Other' last)
   const expenseCategoriesOrdered = useMemo(() => {
     return categories
       .filter((c) => c.type === "expense")
       .slice()
       .sort((a, b) => {
-        // Ensure 'Inne wydatki' is always last
         if (a.name === 'Inne wydatki') return 1;
         if (b.name === 'Inne wydatki') return -1;
         return a.name.localeCompare(b.name);
       });
   }, [categories]);
 
-  // Reset category selection when type filter changes
-  useEffect(() => {
-    if (categoryId.length === 0) return;
-    const valid = categoryId.filter((id) => visibleCategories.some((c) => String(c.id) === id));
-    if (valid.length !== categoryId.length) setCategoryId(valid);
-  }, [type, categories]);
+  // Helper: calculate spending volatility (CV = coefficient of variation)
+  // Returns: 'stabilne' (CV < 0.3), 'zmienne' (0.3-0.7), 'mocno_zmienne' (≥ 0.7)
+  const getVolatility = (amounts: number[]): { volatility: string; cv: number } => {
+    if (amounts.length < 2) return { volatility: 'mało_danych', cv: 0 };
+    const mean = amounts.reduce((s, a) => s + a, 0) / amounts.length;
+    if (mean === 0) return { volatility: 'brak_wydatków', cv: 0 };
+    const variance = amounts.reduce((s, a) => s + Math.pow(a - mean, 2), 0) / amounts.length;
+    const std = Math.sqrt(variance);
+    const cv = std / mean;
+    
+    if (cv < 0.3) return { volatility: 'stabilne', cv };
+    if (cv < 0.7) return { volatility: 'zmienne', cv };
+    return { volatility: 'mocno_zmienne', cv };
+  };
 
-  // Filter transactions based on all selected filters.
-  const filteredTx = useMemo(() => {
-    const s = start ? new Date(start) : null;
-    const e = end ? new Date(end) : null;
-    return sourceTransactions.filter((t) => {
-      if (type !== "all") {
-        const txType = getTransactionType(t, categories);
-        if (txType !== type) return false;
-      }
-      if (categoryId.length > 0 && !categoryId.includes(String(t.category_id ?? ""))) return false;
-      const d = new Date(t.date);
-      if (s && d < s) return false;
-      if (e && d > e) return false;
-      if (year && String(d.getFullYear()) !== year) return false;
-      return true;
-    });
-  }, [sourceTransactions, type, categoryId, start, end, year, categories]);
+  const filteredTx = sourceTransactions;
 
-  // Monthly summaries for last 6 months (compact) and 12M averages for comparison
+  // Calculate monthly summaries: last 6 months with trend indicators, 12-month averages
   const monthlySummaries = useMemo(() => {
-    // build a map year-month -> expense sum
+    // Build aggregation: year-month -> total expenses
     const monthlyMap = new Map<string, number>();
     const monthlyCategoryMap = new Map<string, Map<number, number>>();
-    filteredTx.forEach((t) => {
+    filteredTx.forEach((t: Transaction) => {
       const d = new Date(t.date);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (getTransactionType(t, categories) === "expense") {
@@ -344,17 +311,24 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
     const avg12 = lastTwelveMonths.reduce((s, m) => s + m.expense, 0) / Math.max(1, lastTwelveMonths.length);
 
-    // Compute per-category 12M averages
+    // Compute per-category 12M averages and volatility
     const perCategorySum = new Map<number, number>();
+    const perCategoryValues = new Map<number, number[]>(); // Track all values for volatility
     lastTwelveMonths.forEach((m) => {
       const catMap = monthlyCategoryMap.get(m.key) || new Map<number, number>();
       catMap.forEach((amt, catId) => {
         perCategorySum.set(catId, (perCategorySum.get(catId) || 0) + amt);
+        const values = perCategoryValues.get(catId) || [];
+        values.push(amt);
+        perCategoryValues.set(catId, values);
       });
     });
     const perCategoryAvg12 = new Map<number, number>();
+    const perCategoryVolatility = new Map<number, { volatility: string; cv: number }>();
     perCategorySum.forEach((sum, catId) => {
       perCategoryAvg12.set(catId, Number((sum / 12).toFixed(2)));
+      const values = perCategoryValues.get(catId) || [];
+      perCategoryVolatility.set(catId, getVolatility(values));
     });
 
     // Determine direction per month compared to 12M average (threshold 5%)
@@ -364,100 +338,26 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
         const change = ((m.expense - avg12) / avg12) * 100;
         direction = change > 5 ? "up" : change < -5 ? "down" : "stable";
       }
-      // augment categoryTotals with per-category 12M avg and direction
+      // augment categoryTotals with per-category 12M avg, direction and volatility
       const categoryTotals = m.categoryTotals.map((ct) => {
         const avgCat = perCategoryAvg12.get(Number(ct.id)) || 0;
+        const volatilityInfo = perCategoryVolatility.get(Number(ct.id)) || { volatility: 'mało_danych', cv: 0 };
         let dir: "up" | "down" | "stable" = "stable";
         if (avgCat > 0) {
           const changeCat = ((ct.amount - avgCat) / avgCat) * 100;
           dir = changeCat > 5 ? "up" : changeCat < -5 ? "down" : "stable";
         }
-        return { ...ct, avg12: avgCat, direction: dir };
+        return { ...ct, avg12: avgCat, direction: dir, volatility: volatilityInfo.volatility, cv: volatilityInfo.cv };
       });
 
       return { ...m, direction, categoryTotals };
     });
 
-    return { months: withDirection, avg12, perCategoryAvg12 };
+    return { months: withDirection, avg12, perCategoryAvg12, perCategoryVolatility };
   }, [filteredTx, lastSixMonths, expenseCategoriesOrdered]);
-
-  // Calculate totals using category-derived type
-  const totalIncome = filteredTx
-    .filter((t) => getTransactionType(t, categories) === "income")
-    .reduce((s, t) => s + t.amount, 0);
-  const totalExpense = filteredTx
-    .filter((t) => getTransactionType(t, categories) === "expense")
-    .reduce((s, t) => s + t.amount, 0);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#dec5feff", border: "2px solid #EEEEEE" }}>
-          <div className="flex items-center gap-2">
-            <label className="text-sm" style={{ fontWeight: 700 }}>Rok</label>
-            <div className="w-40">
-              <Dropdown
-                value={year}
-                options={[{ value: '', label: 'Wszystkie' }, ...years.map(y => ({ value: String(y), label: String(y) }))]}
-                onChange={(v) => setYear(v as string)}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
-            <div className="w-40">
-              <Dropdown
-                value={type}
-                options={[
-                  { value: 'all', label: 'Wszystkie' },
-                  { value: 'income', label: 'Przychód' },
-                  { value: 'expense', label: 'Wydatek' }
-                ]}
-                onChange={(v) => setType(v as 'all' | 'income' | 'expense')}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm" style={{ fontWeight: 700 }}>Kategoria</label>
-            <div className="w-48">
-              <Dropdown
-                multi
-                value={categoryId}
-                options={visibleCategories.map(c => ({ value: String(c.id), label: c.name }))}
-                onChange={(v) => setCategoryId(Array.isArray(v) ? v : [])}
-                placeholder="Wszystkie"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
-            <DatePicker value={start} onChange={setStart} placeholder="Wybierz datę" />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
-            <DatePicker value={end} onChange={setEnd} placeholder="Wybierz datę" />
-          </div>
-
-          <div>
-            <Button
-              onClick={() => {
-                setYear(String(new Date().getFullYear()));
-                setType('all');
-                setCategoryId([]);
-                setStart('');
-                setEnd('');
-              }}
-              style={{ backgroundColor: "#ffffff", color: "#000000" }}
-            >
-              Wyczyść
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* Comparison + Current month side-by-side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -470,12 +370,21 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
           <div className="mb-2">
             <div className="font-medium text-slate-700">Średnia (ostatnie 12 miesięcy): <span className="font-semibold">{monthlySummaries.avg12.toFixed(2)} zł</span></div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {expenseCategoriesOrdered.map((c) => (
-                <div key={c.id} className="text-xs text-slate-600 flex justify-between">
-                  <div>{c.name}</div>
-                  <div className="font-medium">{(monthlySummaries.perCategoryAvg12.get(Number(c.id)) || 0).toFixed(2)} zł</div>
-                </div>
-              ))}
+              {expenseCategoriesOrdered.map((c) => {
+                const catId = Number(c.id);
+                const volatilityInfo = monthlySummaries.perCategoryVolatility?.get(catId) || { volatility: 'mało_danych', cv: 0 };
+                return (
+                  <div key={c.id} className="text-xs text-slate-600 flex justify-between items-center gap-2">
+                    <div>{c.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium">{(monthlySummaries.perCategoryAvg12.get(catId) || 0).toFixed(2)} zł</div>
+                      <div className={`text-xs ${getVolatilityColor(volatilityInfo.volatility)} font-medium`}>
+                        {(volatilityInfo.volatility === 'mało_danych' || volatilityInfo.volatility === 'brak_wydatków') ? '◆ Mało danych' : formatVolatility(volatilityInfo.volatility)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -484,7 +393,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           {monthlySummaries.months.map((m) => (
-            <details key={`${m.year}-${m.month}`} className="rounded-lg border mb-1" style={{ borderColor: '#eef2ff' }}>
+            <details key={`${m.year}-${m.month}`} className="rounded-lg border mb-1 border-card-border-light">
               <summary className="flex items-center justify-between p-2 bg-white cursor-pointer">
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-slate-500">{m.fullLabel}</div>
@@ -527,23 +436,42 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
           ))}
         </div>
        <div className="text-xs text-slate-600 mb-3">
-        <div className="flex items-center gap-4 mt-3">
-            <div className="flex items-center gap-2">
-              <span className="text-red-600 font-bold text-lg">↑</span>
-              <span className="w-3 h-3 rounded-sm bg-red-200 inline-block" />
-              <span>Rosnące — większe niż +5% względem średniej</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 font-bold text-lg">↓</span>
-              <span className="w-3 h-3 rounded-sm bg-green-200 inline-block" />
-              <span>Malejące — mniejsze niż -5% względem średniej</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-bold text-lg">→</span>
-              <span className="w-3 h-3 rounded-sm bg-slate-200 inline-block" />
-              <span>Stabilne — mieszczą się w ±5% od średniej</span>
+        <div className="flex flex-col gap-3 mt-3">
+          <div>
+            <div className="font-semibold text-slate-700 mb-2">Trend (porównanie do średniej 12 miesięcy):</div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-red-600 font-bold text-lg">↑</span>
+                <span>Rosnące — większe niż +5% względem średniej</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-600 font-bold text-lg">↓</span>
+                <span>Malejące — mniejsze niż -5% względem średniej</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-bold text-lg">→</span>
+                <span>Stabilne — mieszczą się w ±5% od średniej</span>
+              </div>
             </div>
           </div>
+          <div>
+            <div className="font-semibold text-slate-700 mb-2">Zmienność (nieprzewidywalność wydatków):</div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-600">◆</span>
+                <span>Stabilne — wydatki mało się zmieniają</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-orange-600">◆</span>
+                <span>Zmienne — wydatki się wahają</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-red-600">◆</span>
+                <span>Mocno zmienne — wydatki nieprzewidywalne</span>
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
 
@@ -609,8 +537,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                 return (
                   <div
                     key={pred.category_id}
-                    className="p-3 rounded-lg border bg-white hover:bg-slate-50 transition"
-                    style={{ borderColor: "#d1fae5" }}
+                    className="p-3 rounded-lg border bg-white hover:bg-slate-50 transition border-success-light"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -618,7 +545,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                       </div>
                       <div className="flex gap-4 text-sm">
                         <span className="text-slate-500">
-                          Prognoza: <span className="font-medium text-[#10b981]">{pred.estimated_amount.toFixed(2)} zł</span>
+                          Prognoza: <span className="font-medium text-success-border">{pred.estimated_amount.toFixed(2)} zł</span>
                         </span>
                         <span className="text-slate-500">
                           Wydano: <span className="font-medium text-slate-700">{(pred.actual_amount ?? 0).toFixed(2)} zł</span>
@@ -645,7 +572,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
       <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#B983FF]">Prognoza Przyszłych Wydatków</h3>
+            <h3 className="text-lg font-semibold" style={{ color: "#B983FF" }}>Prognoza Przyszłych Wydatków</h3>
             <p className="text-sm text-slate-600">
               {predictions?.categories_with_ml 
                 ? `${predictions.categories_with_ml} kategorii z modelem ML`
@@ -714,25 +641,18 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                 return aName.localeCompare(bName);
               })
               .map((pred) => {
-              // Trend helper - text version without emoji
-              const trendText = pred.trend_direction === "up" ? "Wzrost" : 
-                                pred.trend_direction === "down" ? "Spadek" : 
-                                pred.trend_direction === "stable" ? "Stabilne" : "";
-              
               return (
                 <div
                   key={pred.category_id}
                   className={`flex items-center justify-between p-4 rounded-lg border transition ${
-                    !pred.has_data ? "opacity-60 bg-slate-50 border-dashed" : "hover:bg-slate-50 bg-white"
+                    !pred.has_data ? "opacity-60 bg-slate-50 border-dashed border-slate-200" : "hover:bg-slate-50 bg-white"
                   }`}
-                  style={{ 
-                    borderColor: pred.has_data ? "#dec5feff" : "#e2e8f0" 
-                  }}
+                  style={{ borderColor: pred.has_data ? "#dec5fe" : undefined }}
                 >
                   <div className="flex items-center gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className={`font-semibold ${pred.has_data ? "text-[#B983FF]" : "text-slate-500"}`}>
+                        <p className="font-semibold" style={{ color: pred.has_data ? "#B983FF" : undefined }}>
                           {pred.category}
                         </p>
                         
@@ -751,7 +671,6 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                       </div>
                       
                       <p className="text-xs text-slate-500 mt-1">
-                        {/* Logika wyświetlania opisu (no emojis) */}
                         {pred.has_data ? (
                           <>
                             {pred.confidence === "high" ? "🟢 Wysoka pewność" : 
@@ -771,7 +690,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                   <div className="text-right">
                     {pred.has_data ? (
                       <>
-                        <p className="font-bold text-lg text-[#B983FF]">{pred.estimated_amount.toFixed(2)} zł</p>
+                        <p className="font-bold text-lg" style={{ color: "#B983FF" }}>{pred.estimated_amount.toFixed(2)} zł</p>
                         <p className="text-xs text-slate-500">prognoza</p>
                       </>
                     ) : (
@@ -796,7 +715,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
       {modelMetrics && (
         <details className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]" >
           <summary className="cursor-pointer mb-4 list-none">
-            <h3 className="text-lg font-semibold text-[#B983FF]">Analiza Modelu ML</h3>
+            <h3 className="text-lg font-semibold" style={{ color: "#B983FF" }}>Analiza Modelu ML</h3>
           </summary>
           
           <div className="grid grid-cols-2 gap-4 mb-6">
@@ -868,24 +787,22 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
       {featureImportance && featureImportance.length > 0 && (
         <details className="bg-white rounded-2xl shadow-sm p-4 border border-[#EEEEEE]">
           <summary className="cursor-pointer mb-4 list-none">
-            <h3 className="text-lg font-semibold text-[#B983FF]">Ważność Cech w Modelu ML</h3>
+            <h3 className="text-lg font-semibold" style={{ color: "#B983FF" }}>Ważność Cech w Modelu ML</h3>
             <p className="text-sm text-slate-600">Które czynniki mają największy wpływ na prognozy?</p>
           </summary>
           
           <div className="space-y-3">
             {featureImportance.map((feature) => {
               const percent = Math.round(feature.importance * 100);
+              // Map feature names to Polish labels (must match backend predictor.py feature_names_pl)
               const featureNames: Record<string, string> = {
-                'rolling_mean_3': 'Średnia 3 ostatnie miesiące',
+                'category_encoded': 'Kategoria',
+                'month_num': 'Miesiąc',
                 'lag_1': 'Wydatek 1 miesiąc temu',
                 'lag_2': 'Wydatek 2 miesiące temu',
                 'lag_3': 'Wydatek 3 miesiące temu',
-                'cat_mean': 'Średnia dla kategorii',
-                'cat_std': 'Odchylenie standardowe',
-                'month': 'Miesiąc',
-                'season': 'Pora roku',
-                'is_holiday_month': 'Miesiąc świąteczny',
-                'category_encoded': 'Kategoria'
+                'pct_change': 'Zmiana procentowa',
+                'cv': 'Zmienność wydatków'
               };
               
               const displayName = featureNames[feature.name] || feature.name;
@@ -895,11 +812,11 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium text-slate-700">{displayName}</span>
-                      <span className="text-sm font-bold text-[#B983FF]">{percent}%</span>
+                      <span className="text-sm font-bold" style={{ color: "#B983FF" }}>{percent}%</span>
                     </div>
                     <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#B983FF] to-[#7c3aed]"
+                        className="h-full rounded-full bg-gradient-to-r from-purple-400 to-violet-600"
                         style={{ width: `${percent}%` }}
                       />
                     </div>

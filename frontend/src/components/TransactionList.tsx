@@ -14,6 +14,7 @@ import { AddTransactionDialog } from "./AddTransactionDialog";
 import Dropdown from "./ui/dropdown";
 import { DatePicker } from "./ui/calendarview";
 
+/** Filter values for transactions: type, categories, date range */
 interface FilterVals {
   type: "all" | "income" | "expense";
   categoryId: string[];
@@ -57,6 +58,7 @@ export function TransactionList({
   const [searchVisible, setSearchVisible] = useState(false);
   const [localShowFilters, setLocalShowFilters] = useState(false);
   const filtersRef = useRef<HTMLDivElement | null>(null);
+  
   // Keep filters panel open when any filter is active
   const hasActiveFilters = (
     currentFilters.type !== 'all' ||
@@ -64,6 +66,8 @@ export function TransactionList({
     !!currentFilters.start ||
     !!currentFilters.end
   );
+  
+  // Use parent-controlled visibility if provided, otherwise use local state (ensure filters stay open when active)
   const effectiveShowFilters = (typeof showFilters !== 'undefined')
     ? (showFilters || hasActiveFilters)
     : (localShowFilters || hasActiveFilters);
@@ -74,31 +78,37 @@ export function TransactionList({
     }
   }, [effectiveShowFilters]);
 
+  // Filter categories by type - only show categories matching current type filter
   const visibleCategories = categories.filter(c =>
     currentFilters.type === 'all' ? true : c.type === currentFilters.type
   );
 
+  // Format transaction date as Polish format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // Open edit dialog with selected transaction
   const openEdit = (tx: Transaction) => {
     setSelected(tx);
     setTimeout(() => setIsEditOpen(true), 0);
   };
 
+  // Submit edited transaction and close dialog
   const handleEdit = (id: string, payload: Omit<Transaction, 'id'>) => {
     onEdit(id, payload);
     setIsEditOpen(false);
     setSelected(null);
   };
 
-    const openDelete = (tx: Transaction) => {
+  // Open delete confirmation dialog
+  const openDelete = (tx: Transaction) => {
     setToDelete(tx);
     setIsDeleteOpen(true);
   };
 
+  // Confirm deletion and close dialog
   const handleDelete = () => {
     if (!toDelete) return;
     onDelete(toDelete.id);
@@ -106,20 +116,23 @@ export function TransactionList({
     setToDelete(null);
   };
 
-  // Derive displayed transactions locally using filters
+  // Apply all active filters to transaction list (type, categories, date range, search)
   const displayTransactions = useMemo(() => {
     const { type, categoryId, start, end } = currentFilters;
     let list = transactions;
 
+    // Filter by transaction type (income/expense)
     if (type !== 'all') {
       list = list.filter(t => getTransactionType(t, categories) === type);
     }
 
+    // Filter by selected categories
     if (categoryId && categoryId.length > 0) {
       const ids = new Set(categoryId.map(id => Number(id)));
       list = list.filter(t => t.category_id !== null && ids.has(Number(t.category_id)));
     }
 
+    // Filter by date range
     const s = start ? new Date(start) : null;
     const e = end ? new Date(end) : null;
     if (s) list = list.filter(t => new Date(t.date) >= s);
@@ -135,8 +148,8 @@ export function TransactionList({
           <AddTransactionDialog onAdd={onAdd} categories={categories} />
           <Button 
             variant="ghost"
-            style={{ backgroundColor: "#dec5feff", color: "#000000" }}
-            className="border-0 hover:bg-[#7ecfff]"
+            style={{ backgroundColor: "#dec5fe", color: "#000000" }}
+            className="border-0"
             onClick={() => {
               if (onToggleFilters) {
                 // Parent may control visibility; still enforce open when filters are active
@@ -157,7 +170,7 @@ export function TransactionList({
           <Button
             variant="default"
             className="border-0"
-            style={{ backgroundColor: "#dec5feff", color: "#0f172a" }}
+            style={{ backgroundColor: "#dec5fe", color: "#0f172a" }}
              onClick={() => {
                setSearchVisible(prev => {
                  const next = !prev;
@@ -193,9 +206,9 @@ export function TransactionList({
 
       {effectiveShowFilters && (
         <div ref={filtersRef} id="filters-block" className="mb-4 flex flex-col items-center gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl" style={{ backgroundColor: "#dec5feff", border: "2px solid #EEEEEE" }}>
+          <div className="flex flex-wrap items-center justify-center gap-2 p-4 rounded-2xl border-2 border-slate-200" style={{ backgroundColor: "#dec5fe" }}>
             <div className="flex items-center gap-2">
-              <label className="text-sm" style={{ fontWeight: 700 }}>Typ</label>
+              <label className="text-sm font-bold">Typ</label>
               <div className="w-40">
                 <Dropdown
                   value={currentFilters.type}
@@ -213,7 +226,7 @@ export function TransactionList({
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm" style={{ fontWeight: 700 }}>Kategoria</label>
+              <label className="text-sm font-bold">Kategoria</label>
               <div className="w-48">
                 <Dropdown
                   multi
@@ -226,7 +239,7 @@ export function TransactionList({
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm" style={{ fontWeight: 700 }}>Od</label>
+              <label className="text-sm font-bold">Od</label>
               <DatePicker
                 value={currentFilters.start}
                 onChange={(v) => onApplyFilters({ ...currentFilters, start: v })}
@@ -235,7 +248,7 @@ export function TransactionList({
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm" style={{ fontWeight: 700 }}>Do</label>
+              <label className="text-sm font-bold">Do</label>
               <DatePicker
                 value={currentFilters.end}
                 onChange={(v) => onApplyFilters({ ...currentFilters, end: v })}
@@ -246,7 +259,7 @@ export function TransactionList({
             <div>
               <Button
                 onClick={onClearFilters}
-                style={{ backgroundColor: "#ffffffff", color: "#000000" }}
+                style={{ backgroundColor: "#ffffff", color: "#000000" }}
               >
                 Wyczyść
               </Button>
@@ -257,7 +270,7 @@ export function TransactionList({
     
       <Card>
         <CardHeader> 
-          <CardTitle  style={{fontWeight: 700 }}>Ostatnie Transakcje</CardTitle>
+          <CardTitle className="font-bold">Ostatnie Transakcje</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

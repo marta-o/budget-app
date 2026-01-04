@@ -1,6 +1,6 @@
 /**
- * Dashboard - main view after login.
- * Displays monthly summary, transactions list, analytics, and planning tabs.
+ * Dashboard - Main application view after user login.
+ * Displays current month summary, transactions, analytics, planning, and education tabs.
  */
 import { useEffect, useState, useMemo } from "react";
 import { getTransactions, addTransaction, updateTransaction, deleteTransaction } from "../api";
@@ -22,7 +22,8 @@ interface DashboardProps {
 }
 
 export function Dashboard({ username, token, categories, onLogout }: DashboardProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -43,6 +44,23 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
     if (valid.length !== filterCategoryId.length) setFilterCategoryId(valid);
   }, [filterType, visibleCategories, filterCategoryId]);
 
+  // Fetch ALL transactions (unfiltered) for monthly summary card display
+  useEffect(() => {
+    let mounted = true;
+    const fetchAll = async () => {
+      try {
+        const res = await getTransactions(token);
+        if (mounted) setAllTransactions(res || []);
+      } catch (e: any) {
+        if (mounted) setError(e.message || 'Błąd pobierania');
+      }
+    };
+
+    if (token) fetchAll();
+    return () => { mounted = false; };
+  }, [token]);
+
+  // Fetch FILTERED transactions for TransactionList display only
   useEffect(() => {
     let mounted = true;
     const fetchTx = async () => {
@@ -55,7 +73,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         if (filterEnd) filters.end = filterEnd;
         if (q) filters.q = q;
         const res = await getTransactions(token, filters);
-        if (mounted) setTransactions(res || []);
+        if (mounted) setFilteredTransactions(res || []);
       } catch (e: any) {
         if (mounted) setError(e.message || 'Błąd pobierania');
       } finally {
@@ -74,14 +92,15 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
   const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
+  // Calculate current month transactions from ALL transactions (not filtered)
   const currentMonthTransactions = useMemo(() => {
-    return transactions.filter(t => {
+    return allTransactions.filter(t => {
       const d = new Date(t.date);
       return d >= currentMonthStart && d <= currentMonthEnd;
     });
-  }, [transactions, currentMonthStart, currentMonthEnd]);
+  }, [allTransactions, currentMonthStart, currentMonthEnd]);
 
-  // Calculate totals using category type
+  // Calculate totals for current month summary card (from ALL transactions)
   const totalIncome = currentMonthTransactions
     .filter(t => getTransactionType(t, categories) === "income")
     .reduce((s, t) => s + t.amount, 0);
@@ -90,52 +109,70 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
     .reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpenses;
 
+  // Handle add transaction - update both all and filtered lists
   const handleAdd = async (tx: Omit<Transaction, 'id'>) => {
     const tempId = `tmp-${Date.now()}`;
     const temp = { ...tx, id: tempId };
-    setTransactions(prev => [temp, ...prev]);
+    setAllTransactions(prev => [temp, ...prev]);
+    setFilteredTransactions(prev => [temp, ...prev]);
     try {
       const created = await addTransaction(token, tx as any);
-      if (created && created.id) setTransactions(prev => prev.map(t => t.id === tempId ? created : t));
+      if (created && created.id) {
+        setAllTransactions(prev => prev.map(t => t.id === tempId ? created : t));
+        setFilteredTransactions(prev => prev.map(t => t.id === tempId ? created : t));
+      }
     } catch (e: any) {
-      setTransactions(prev => prev.filter(t => t.id !== tempId));
+      setAllTransactions(prev => prev.filter(t => t.id !== tempId));
+      setFilteredTransactions(prev => prev.filter(t => t.id !== tempId));
       setError(e?.message || 'Nie udało się dodać transakcji');
     }
   };
 
+  // Handle edit transaction - update both all and filtered lists
   const handleEdit = async (id: string, payload: Omit<Transaction, 'id'>) => {
-    const backup = transactions;
-    setTransactions(prev => prev.map(t => t.id === id ? { ...payload, id } : t));
+    const allBackup = allTransactions;
+    const filtBackup = filteredTransactions;
+    setAllTransactions(prev => prev.map(t => t.id === id ? { ...payload, id } : t));
+    setFilteredTransactions(prev => prev.map(t => t.id === id ? { ...payload, id } : t));
     try {
       await updateTransaction(token, id, payload as any);
     } catch (e: any) {
-      setTransactions(backup);
+      setAllTransactions(allBackup);
+      setFilteredTransactions(filtBackup);
       setError(e?.message || 'Edycja nie powiodła się');
     }
   };
 
+  // Handle delete transaction - update both all and filtered lists
   const handleDelete = async (id: string) => {
-    const backup = transactions;
-    setTransactions(prev => prev.filter(t => t.id !== id));
+    const allBackup = allTransactions;
+    const filtBackup = filteredTransactions;
+    setAllTransactions(prev => prev.filter(t => t.id !== id));
+    setFilteredTransactions(prev => prev.filter(t => t.id !== id));
     try {
       await deleteTransaction(token, id);
     } catch (e: any) {
-      setTransactions(backup);
+      setAllTransactions(allBackup);
+      setFilteredTransactions(filtBackup);
       setError(e?.message || 'Usuwanie nie powiodło się');
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="text-black p-4 md:p-6" style={{ 
-        backgroundImage: "url('/background.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center"
-      }}>
+      <div 
+        className="text-black p-4 md:p-6" 
+        style={{ 
+          backgroundImage: "url('/background.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
+      >
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl" style={{ backgroundColor: "#dec5feff" }}>
+            <div className="p-3 rounded-xl" style={{ backgroundColor: "#dec5fe" }}>
               <Wallet className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -146,7 +183,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
             <Button 
               variant="ghost" 
               className="border border-gray-500 text-black gap-2"
-              style={{ backgroundColor: "#dec5feff", color: "#000000" }}
+              style={{ backgroundColor: "#dec5fe" }}
               onClick={onLogout} 
               aria-label="Wyloguj"
           >
@@ -160,7 +197,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
              }}>
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-5 h-5 text-black" />
-              <h2 className="capitalize" style={{ color: "#000000ff" }}>{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
+              <h2 className="capitalize text-black">{currentDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -191,11 +228,12 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto" style={{ marginTop: "2rem", paddingLeft: "1rem", paddingRight: "1rem" }}>
+      <div className="max-w-7xl mx-auto mt-8 px-4">
       <Tabs
         defaultValue="transactions"
         className="space-y-4"
         onValueChange={(v) => {
+          // Reset filters when switching away from transactions tab
           if (v !== "transactions") {
             setFilterType("all");
             setFilterCategoryId([]);
@@ -206,8 +244,8 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         }}
       >
         <TabsList
-          className="grid w-full grid-cols-4 rounded-2xl p-1 !bg-[#C088E3] !text-black"
-          style={{ backgroundColor: "#dec5feff" }} //kolor paska
+          className="grid w-full grid-cols-4 rounded-2xl p-1 !text-black"
+          style={{ backgroundColor: "#dec5fe" }}
         >
           <TabsTrigger value="transactions" className="!text-black">
             Transakcje
@@ -225,7 +263,7 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
 
         <TabsContent value="transactions" className="space-y-4">
           <TransactionList
-            transactions={transactions}
+            transactions={filteredTransactions}
             onDelete={handleDelete}
             onEdit={handleEdit}
             categories={categories}
@@ -250,11 +288,11 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <Analytics transactions={transactions} categories={categories} token={token} />
+          <Analytics transactions={allTransactions} categories={categories} token={token} />
         </TabsContent>
 
         <TabsContent value="planning" className="space-y-4">
-          <Planning transactions={transactions} categories={categories} token={token} />
+          <Planning transactions={allTransactions} categories={categories} token={token} />
         </TabsContent>
 
         <TabsContent value="news" className="space-y-4">

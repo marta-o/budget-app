@@ -24,22 +24,17 @@ interface AddTransactionDialogProps {
 export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Form fields
+  // Form state for new transaction
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Calculate last day of current month
-  const getLastDayOfMonth = () => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  };
-
   // Filter categories based on selected type (income or expense)
   const visibleCategories = categories.filter((c) => c.type === type);
 
+  // Submit form - validate and call onAdd callback
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) {
@@ -47,7 +42,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
       return;
     }
 
-    // Find selected category to get its type
+    // Get selected category to determine type and name
     const selectedCategory = categories.find((c) => c.id === Number(categoryId));
 
     const payload: Omit<Transaction, "id"> = {
@@ -74,7 +69,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
       <Button
         className="gap-2"
         onClick={() => setIsOpen(true)}
-        style={{ backgroundColor: "#dec5feff", color: "#000000" }}
+        style={{ backgroundColor: "#dec5fe", color: "#000000" }}
       >
         <Plus className="w-4 h-4" />
         Dodaj Transakcję
@@ -161,7 +156,6 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
                 onChange={(v) => setDate(v)}
                 placeholder="Wybierz datę"
                 fromYear={2000}
-                maxDate={getLastDayOfMonth()}
               />
             </div>
 
@@ -170,8 +164,8 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
               <DialogClose asChild>
                 <Button
                   variant="outline"
-                  className="border-0 !bg-[#c4a2efff] !text-black hover:!bg-[#7ecfff]"
-                  style={{ backgroundColor: "#caa5fcff", color: "#000000" }}
+                  className="border-0"
+                  style={{ backgroundColor: "#caa5fc", color: "#000000" }}
                   type="button"
                 >
                   Anuluj
@@ -180,7 +174,6 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
 
               <Button
                 type="submit"
-                className="!bg-white !text-black"
                 style={{ backgroundColor: "#ffffff", color: "#000000" }}
               >
                 Dodaj

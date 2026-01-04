@@ -16,13 +16,15 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 _ml_predictor: Optional[UserMLPredictor] = None
 
 def get_ml_predictor() -> UserMLPredictor:
+    """Get or initialize global ML predictor singleton instance."""
     global _ml_predictor
     if _ml_predictor is None:
         _ml_predictor = UserMLPredictor()
     return _ml_predictor
 
+
 def parse_date(value: Optional[str]) -> Optional[date]:
-    """Safely parse ISO date string, returns None if invalid."""
+    """Safely parse ISO date string (YYYY-MM-DD format). Returns None if invalid."""
     if not value:
         return None
     try:
@@ -32,13 +34,14 @@ def parse_date(value: Optional[str]) -> Optional[date]:
 
 
 def parse_int(value: Optional[str]) -> Optional[int]:
-    """Safely parse integer string, returns None if invalid."""
+    """Safely parse integer string. Returns None if invalid or empty."""
     if not value:
         return None
     try:
         return int(value)
     except ValueError:
         return None
+
 
 @router.get("/")
 def list_transactions(
@@ -58,6 +61,7 @@ def list_transactions(
         q
     )
 
+
 @router.post("/", response_model=schemas.TransactionOut, status_code=201)
 def add_transaction(
     transaction: schemas.TransactionCreate,
@@ -76,6 +80,7 @@ def add_transaction(
     
     return new_tx
 
+
 @router.put("/{tx_id}", response_model=schemas.TransactionOut)
 def update_transaction(
     tx_id: int = Path(..., gt=0),
@@ -88,6 +93,7 @@ def update_transaction(
     if not updated:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return updated
+
 
 @router.delete("/{tx_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(

@@ -1,10 +1,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-
-function cn(...classes: (string | undefined | null | false)[]) {
-  return classes.filter(Boolean).join(" ");
-}
+import { cn } from "./utils";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -40,13 +37,13 @@ export const DialogContent = React.forwardRef<
           ref={ref}
           className={cn(
             // UWAGA: bez translate, centrowanie robi Grid wrapper
-            "relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-2xl",
+"relative w-full max-w-lg rounded-lg border border-slate-200 p-6 shadow-2xl",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
             "backdrop-blur-none bg-opacity-100", // zero „szkła”
             className
           )}
-          style={{ backgroundColor: "#dec5feff" }}
+          style={{ backgroundColor: "#dec5fe" }}
 
           {...props}
         >

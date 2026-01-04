@@ -1,5 +1,6 @@
 /**
- * Education page - financial education content.
+ * Education - Financial education content and tips for users.
+ * Displays financial tips and educational glossary terms with explanations.
  */
 import { useMemo, useState } from "react";
 import { Button } from "./ui/button";
@@ -8,6 +9,14 @@ import {
   Calculator, WalletCards, Handshake, TrendingUp
 } from "lucide-react";
 
+// Financial education tip structure
+type Tip = {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+};
+
+// Financial glossary term structure
 type Term = {
   term: string;
   definition: string;
@@ -15,13 +24,8 @@ type Term = {
   icon: React.ReactNode;
 };
 
-type Tip = {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-};
-
 export function Education() {
+  // Financial tips for personal budget management
   const tips: Tip[] = useMemo(
   () => [
     {
@@ -47,7 +51,6 @@ export function Education() {
   ],
   []
 );
-
 
   const terms: Term[] = useMemo(
     () => [
@@ -143,7 +146,7 @@ export function Education() {
         definition:
           "Krótkoterminowe zadłużenie na rachunku bankowym, pozwalające wydać więcej środków niż wynosi dostępne saldo.",
         details: [
-          "Też nazywany \"kredytem w koncie.\"",
+          "Też nazywany \"kredytem w koncie\".",
           "Zazwyczaj ma bardzo wysokie oprocentowanie.",
           "Rozwiązanie to przeznaczone jest głównie na krótkotrwałe, nagłe potrzeby finansowe.",
           "Lepszą alternatywą dla debetu jest posiadanie funduszu awaryjnego."
@@ -159,7 +162,7 @@ export function Education() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold" style={{ color: "#000000ff" }}>
+        <h2 className="text-xl font-semibold text-black">
           Edukacja Finansowa
         </h2>
         <p className="text-slate-500">Podstawowe pojęcia finansowe i praktyczne porady</p>
@@ -171,9 +174,9 @@ export function Education() {
           <div
             key={t.title}
             className="bg-white rounded-2xl shadow-sm p-4 border"
-            style={{ borderColor: "#ac85e0ff", backgroundColor: "#ffffff" }}
+            style={{ borderColor: "#ac85e0" }}
           >
-            <p className="font-semibold mb-1 flex items-center gap-2" style={{ color: "#ac85e0ff" }}>
+            <p className="font-semibold mb-1 flex items-center gap-2" style={{ color: "#ac85e0" }}>
               <span 
                 className="flex items-center justify-center w-7 h-7 rounded-lg"
                 style={{ backgroundColor: "rgba(172,133,224,0.12)" }}>
@@ -188,12 +191,11 @@ export function Education() {
 
       {/* Dictionary */}
       <div
-        className="bg-white rounded-2xl shadow-sm border p-6"
-        style={{ borderColor: "rgba(148, 179, 253, 0.3)", backgroundColor: "#ffffff" }}
+        className="bg-white rounded-2xl shadow-sm border border-slate-200/50 p-6"
       >
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
-            <p className="font-semibold" style={{ color: "#000000ff" }}>
+            <p className="font-semibold text-black">
               Słownik Pojęć Finansowych
             </p>
             <p className="text-slate-500 text-sm">
@@ -203,7 +205,7 @@ export function Education() {
 
           <Button 
             onClick={() => setOpenAll((v) => !v)}
-            style={{ backgroundColor: "#d0b7f1ff", color: "#000000ff" }}
+            style={{ backgroundColor: "#d0b7f1", color: "#000000" }}
           >
             {openAll ? "Zwiń wszystko" : "Rozwiń wszystko"}
           </Button>
@@ -214,13 +216,12 @@ export function Education() {
             <details
               key={item.term}
               open={openAll}
-              className="rounded-xl border px-3 py-2"
-              style={{ borderColor: "rgba(148, 179, 253, 0.3)", paddingRight: "1rem" }}
+              className="rounded-xl border border-slate-200/50 px-3 py-2 pr-4"
             >
               <summary className="cursor-pointer select-none font-semibold flex items-center gap-3">
                 <span
                   className="flex items-center justify-center w-8 h-8 rounded-lg"
-                  style={{ backgroundColor: "rgba(172,133,224,0.12)", color: "#ac85e0ff" }}
+                  style={{ backgroundColor: "rgba(172,133,224,0.12)", color: "#ac85e0" }}
                 >
                   {item.icon}
                 </span>
@@ -244,18 +245,17 @@ export function Education() {
 
       {/* Extra info blocks */}
       <div
-        className="bg-white rounded-2xl shadow-sm border p-4 space-y-4"
-        style={{ borderColor: "rgba(148, 179, 253, 0.3)", backgroundColor: "#ffffff" }}
+        className="bg-white rounded-2xl shadow-sm border border-slate-200/50 p-4 space-y-4"
       >
-        <p className="font-semibold" style={{ color: "#000000ff" }}>
+        <p className="font-semibold text-black">
           Przydatne Informacje
         </p>
 
         <div
-          className="pl-4 py-2 rounded-r-lg"
-          style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
+          className="pl-4 py-2 rounded-r-lg bg-white"
+          style={{ borderLeft: "4px solid #ac85e0" }}
         >
-          <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
+          <p className="font-semibold" style={{ color: "#ac85e0" }}>
             Minimalna Płaca w Polsce (2026)
           </p>
           <p className="text-slate-600 text-sm mt-1">
@@ -264,10 +264,10 @@ export function Education() {
         </div>
 
         <div
-          className="pl-4 py-2 rounded-r-lg"
-          style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
+          className="pl-4 py-2 rounded-r-lg bg-white"
+          style={{ borderLeft: "4px solid #ac85e0" }}
         >
-          <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
+          <p className="font-semibold" style={{ color: "#ac85e0" }}>
             Kwota wolna od podatku
           </p>
           <p className="text-slate-600 text-sm mt-1">
@@ -276,10 +276,10 @@ export function Education() {
         </div>
 
         <div
-          className="pl-4 py-2 rounded-r-lg"
-          style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
+          className="pl-4 py-2 rounded-r-lg bg-white"
+          style={{ borderLeft: "4px solid #ac85e0" }}
         >
-          <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
+          <p className="font-semibold" style={{ color: "#ac85e0" }}>
             Skala podatkowa PIT (2026)
           </p>
           <p className="text-slate-600 text-sm mt-1">
