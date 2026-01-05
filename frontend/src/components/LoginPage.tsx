@@ -115,7 +115,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center" style={{ backgroundImage: "url('/firstBackground.png')" }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "url('/firstBackground.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="w-full max-w-md space-y-4">
         {!showRegister ? (
           <Card>

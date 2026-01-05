@@ -19,16 +19,20 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"day" | "year" | "month" | "customYear">("day");
   const [customYearInput, setCustomYearInput] = useState<string>("");
+  const [hoveredYear, setHoveredYear] = useState<number | null>(null);
+  const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
 
   const today = useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
   const currentMonthIndex = today.getMonth();
+  const endOfCurrentMonth = useMemo(() => new Date(currentYear, currentMonthIndex + 1, 0), [currentYear, currentMonthIndex]);
   
   // Use maxDate if provided, otherwise use today
   const disabledAfter = useMemo(() => {
-    if (maxDate) return maxDate;
-    return today;
-  }, [maxDate, today]);
+    const cap = endOfCurrentMonth;
+    if (maxDate) return maxDate < cap ? maxDate : cap;
+    return cap;
+  }, [maxDate, endOfCurrentMonth]);
 
   const selected = useMemo(() => {
     if (!value) return undefined;
@@ -135,19 +139,27 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
 
           {view === "year" && (
             <div className="grid grid-cols-4 gap-1.5 p-2 min-h-[240px] overflow-y-auto max-h-[270px]">
-              {years.map((y) => (
-                <button
-                  key={y}
-                  type="button"
-                  className={`rounded-md border px-2.5 py-1.5 text-sm ${y === month.getFullYear() ? "bg-[#dec5feff] text-[#1f2937]" : "bg-white"}`}                  style={y === month.getFullYear() ? { backgroundColor: "#dec5fe" } : {}}
-                  onClick={() => {
-                    setMonth(new Date(y, Math.min(month.getMonth(), y === currentYear ? currentMonthIndex : 11), 1));
-                    setView("month");
-                  }}
-                >
-                  {y}
-                </button>
-              ))}
+              {years.map((y) => {
+                const isSelected = y === month.getFullYear();
+                const isHover = hoveredYear === y;
+                const bg = isSelected ? "#dec5fe" : isHover ? "#f1e8ff" : "#ffffff";
+                return (
+                  <button
+                    key={y}
+                    type="button"
+                    className={`rounded-md border px-2.5 py-1.5 text-sm transition-colors duration-150 cursor-pointer ${isSelected ? "text-[#1f2937]" : "text-slate-700"}`}
+                    style={{ backgroundColor: bg }}
+                    onMouseEnter={() => setHoveredYear(y)}
+                    onMouseLeave={() => setHoveredYear(null)}
+                    onClick={() => {
+                      setMonth(new Date(y, Math.min(month.getMonth(), y === currentYear ? currentMonthIndex : 11), 1));
+                      setView("month");
+                    }}
+                  >
+                    {y}
+                  </button>
+                );
+              })}
               <button
                 type="button"
                 className="rounded-md px-2.5 py-1.5 text-sm bg-[#dec5feff] text-[#1f2937] hover:bg-[#b983ff]"
@@ -208,13 +220,18 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
             <div className="grid grid-cols-3 gap-2 p-2 min-h-[240px]">
               {months.map((m) => {
                 const disabled = month.getFullYear() === currentYear && m.value > currentMonthIndex;
+                const isSelected = m.value === month.getMonth();
+                const isHover = hoveredMonth === m.value;
+                const bg = isSelected ? "#dec5fe" : isHover ? "#f1e8ff" : "#ffffff";
                 return (
                   <button
                     key={m.value}
                     type="button"
                     disabled={disabled}
-                    className={`rounded-md border px-3 py-2 text-sm capitalize ${m.value === month.getMonth() ? "text-gray-800" : "bg-white"} ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
-                    style={m.value === month.getMonth() ? { backgroundColor: "#dec5fe" } : {}}
+                    className={`rounded-md border px-3 py-2 text-sm capitalize transition-colors duration-150 ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${isSelected ? "text-gray-800" : "text-slate-700"}`}
+                    style={{ backgroundColor: bg }}
+                    onMouseEnter={() => !disabled && setHoveredMonth(m.value)}
+                    onMouseLeave={() => setHoveredMonth(null)}
                     onClick={() => {
                       if (disabled) return;
                       setMonth(new Date(month.getFullYear(), m.value, 1));
