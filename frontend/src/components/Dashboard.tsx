@@ -11,7 +11,7 @@ import { TransactionList } from "./TransactionList";
 import { Analytics } from "./Analytics";
 import { Planning } from "./Planning";
 import { Transaction, Category, getTransactionType } from "../App";
-import { Education } from "./Education";  
+import { Education } from "./Education";
 
 
 interface DashboardProps {
@@ -186,9 +186,9 @@ export function Dashboard({ username, token, categories, onLogout }: DashboardPr
               style={{ backgroundColor: "#dec5fe" }}
               onClick={onLogout} 
               aria-label="Wyloguj"
-          >
-  <LogOut className="w-4 h-4" /> Wyloguj
-</Button>
+            >
+              <LogOut className="w-4 h-4" /> Wyloguj
+            </Button>
         </div>
 
           <div className="rounded-2xl p-6 shadow-lg"

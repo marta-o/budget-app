@@ -162,7 +162,7 @@ export function Education() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-black">
+        <h2 className="text-xl font-semibold" style={{ color: "#000000ff" }}>
           Edukacja Finansowa
         </h2>
         <p className="text-slate-500">Podstawowe pojęcia finansowe i praktyczne porady</p>
@@ -174,7 +174,7 @@ export function Education() {
           <div
             key={t.title}
             className="bg-white rounded-2xl shadow-sm p-4 border"
-            style={{ borderColor: "#ac85e0" }}
+            style={{ borderColor: "#ac85e0ff", backgroundColor: "#ffffff" }}
           >
             <p className="font-semibold mb-1 flex items-center gap-2" style={{ color: "#ac85e0" }}>
               <span 
@@ -191,11 +191,12 @@ export function Education() {
 
       {/* Dictionary */}
       <div
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/50 p-6"
+        className="bg-white rounded-2xl shadow-sm border p-6"
+        style={{ borderColor: "rgba(148, 179, 253, 0.3)", backgroundColor: "#ffffff" }}
       >
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
-            <p className="font-semibold text-black">
+            <p className="font-semibold" style={{ color: "#000000" }}>
               Słownik Pojęć Finansowych
             </p>
             <p className="text-slate-500 text-sm">
@@ -216,7 +217,8 @@ export function Education() {
             <details
               key={item.term}
               open={openAll}
-              className="rounded-xl border border-slate-200/50 px-3 py-2 pr-4"
+              className="rounded-xl border px-3 py-2"
+              style={{ borderColor: "rgba(148, 179, 253, 0.3)", paddingRight: "1rem" }}
             >
               <summary className="cursor-pointer select-none font-semibold flex items-center gap-3">
                 <span
@@ -245,17 +247,18 @@ export function Education() {
 
       {/* Extra info blocks */}
       <div
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/50 p-4 space-y-4"
+        className="bg-white rounded-2xl shadow-sm border p-4 space-y-4"
+        style={{ borderColor: "rgba(148, 179, 253, 0.3)", backgroundColor: "#ffffff" }}
       >
-        <p className="font-semibold text-black">
+        <p className="font-semibold" style={{ color: "#000000" }}>
           Przydatne Informacje
         </p>
 
         <div
-          className="pl-4 py-2 rounded-r-lg bg-white"
-          style={{ borderLeft: "4px solid #ac85e0" }}
+          className="pl-4 py-2 rounded-r-lg"
+          style={{ borderLeft: "4px solid #ac85e0", backgroundColor: "#ffffff" }}
         >
-          <p className="font-semibold" style={{ color: "#ac85e0" }}>
+          <p className="font-semibold" style={{ color: "#ac85e0ff" }}>
             Minimalna Płaca w Polsce (2026)
           </p>
           <p className="text-slate-600 text-sm mt-1">
@@ -264,8 +267,8 @@ export function Education() {
         </div>
 
         <div
-          className="pl-4 py-2 rounded-r-lg bg-white"
-          style={{ borderLeft: "4px solid #ac85e0" }}
+          className="pl-4 py-2 rounded-r-lg"
+          style={{ borderLeft: "4px solid #ac85e0", backgroundColor: "#ffffff" }}
         >
           <p className="font-semibold" style={{ color: "#ac85e0" }}>
             Kwota wolna od podatku
@@ -276,8 +279,8 @@ export function Education() {
         </div>
 
         <div
-          className="pl-4 py-2 rounded-r-lg bg-white"
-          style={{ borderLeft: "4px solid #ac85e0" }}
+          className="pl-4 py-2 rounded-r-lg"
+          style={{ borderLeft: "4px solid #ac85e0ff", backgroundColor: "#ffffff" }}
         >
           <p className="font-semibold" style={{ color: "#ac85e0" }}>
             Skala podatkowa PIT (2026)

@@ -26,7 +26,6 @@
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
 
-  /* Kolory marki aplikacji */
   --brand-primary: #dec5fe;       /* Główny kolor - jasny fiolet (tła, panele) */
   --brand-secondary: #caa5fc;     /* Ciemniejszy fiolet (przyciski submit) */
   --brand-accent: #ac85e0;        /* Akcent fioletowy (tekst, ikony) */
@@ -87,7 +86,6 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Kolory marki jako klasy Tailwind - bezpośrednie wartości */
   --color-brand-primary: #dec5fe;
   --color-brand-secondary: #caa5fc;
   --color-brand-accent: #ac85e0;

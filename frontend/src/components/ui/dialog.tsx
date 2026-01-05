@@ -36,12 +36,11 @@ export const DialogContent = React.forwardRef<
         <DialogPrimitive.Content
           ref={ref}
           className={cn(
-            // UWAGA: bez translate, centrowanie robi Grid wrapper
-"relative w-full max-w-lg rounded-lg border border-slate-200 p-6 shadow-2xl",
+            className,
+            "relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-2xl",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-            "backdrop-blur-none bg-opacity-100", // zero „szkła”
-            className
+            "backdrop-blur-none bg-opacity-100"
           )}
           style={{ backgroundColor: "#dec5fe" }}
 
@@ -61,16 +60,13 @@ export const DialogContent = React.forwardRef<
 });
 DialogContent.displayName = "DialogContent";
 
-
-
-
 export function DialogHeader({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn(className, "flex flex-col gap-2 text-center sm:text-left")}
       {...props}
     />
   );
@@ -82,10 +78,7 @@ export function DialogFooter({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn(className, "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end")}
       {...props}
     />
   );
@@ -98,7 +91,7 @@ export function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn(className, "text-lg leading-none font-semibold")}
       {...props}
     />
   );
@@ -111,7 +104,7 @@ export function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn(className, "text-muted-foreground text-sm")}
       {...props}
     />
   );

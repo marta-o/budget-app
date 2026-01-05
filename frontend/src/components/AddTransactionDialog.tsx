@@ -31,6 +31,11 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
+  const getLastDayOfMonth = () => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  };
+
   // Filter categories based on selected type (income or expense)
   const visibleCategories = categories.filter((c) => c.type === type);
 
@@ -69,14 +74,14 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
       <Button
         className="gap-2"
         onClick={() => setIsOpen(true)}
-        style={{ backgroundColor: "#dec5fe", color: "#000000" }}
+        style={{ backgroundColor: "#dec5feff", color: "#000000" }}
       >
         <Plus className="w-4 h-4" />
         Dodaj Transakcję
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg rounded-xl shadow-2xl p-0 bg-white/40 backdrop-blur-2xl border border-white/30 text-gray-900">
+        <DialogContent className="max-w-md sm:max-w-lg rounded-xl shadow-2xl bg-white/40 backdrop-blur-2xl border border-white/30 text-gray-900">
           <DialogHeader className="text-center pb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl">
             <DialogTitle className="text-xl font-semibold tracking-tight text-black">
               Dodaj transakcję
@@ -156,6 +161,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
                 onChange={(v) => setDate(v)}
                 placeholder="Wybierz datę"
                 fromYear={2000}
+                maxDate={getLastDayOfMonth()}
               />
             </div>
 
@@ -164,8 +170,8 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
               <DialogClose asChild>
                 <Button
                   variant="outline"
-                  className="border-0"
-                  style={{ backgroundColor: "#caa5fc", color: "#000000" }}
+                  className="border-0 !bg-[#c4a2efff] !text-black hover:!bg-[#7ecfff]"
+                  style={{ backgroundColor: "#caa5fcff", color: "#000000" }}
                   type="button"
                 >
                   Anuluj
@@ -174,6 +180,7 @@ export function AddTransactionDialog({ onAdd, categories = [] }: AddTransactionD
 
               <Button
                 type="submit"
+                className="!bg-white !text-black"
                 style={{ backgroundColor: "#ffffff", color: "#000000" }}
               >
                 Dodaj

@@ -85,7 +85,7 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
           side="bottom"
           align="start"
           className="rounded-xl border bg-white p-2 shadow-xl z-50"
-          style={{ borderColor: "#dec5fe", height: "350px", width: "330px" }}
+          style={{ borderColor: "#dec5fe", backgroundColor: "#ffffff", height: "350px", width: "330px" }}
         >
           <div className="flex items-center justify-between px-2 pb-9">
             <button
@@ -139,8 +139,7 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
                 <button
                   key={y}
                   type="button"
-                  className={`rounded-md border px-2.5 py-1.5 text-sm ${y === month.getFullYear() ? "text-gray-800" : "bg-white"}`}
-                  style={y === month.getFullYear() ? { backgroundColor: "#dec5fe" } : {}}
+                  className={`rounded-md border px-2.5 py-1.5 text-sm ${y === month.getFullYear() ? "bg-[#dec5feff] text-[#1f2937]" : "bg-white"}`}                  style={y === month.getFullYear() ? { backgroundColor: "#dec5fe" } : {}}
                   onClick={() => {
                     setMonth(new Date(y, Math.min(month.getMonth(), y === currentYear ? currentMonthIndex : 11), 1));
                     setView("month");
@@ -151,8 +150,8 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę ", la
               ))}
               <button
                 type="button"
-                className="rounded-md px-2.5 py-1.5 text-sm text-gray-800 border-2"
-                style={{ backgroundColor: "#dec5fe", borderColor: "#dec5fe" }}
+                className="rounded-md px-2.5 py-1.5 text-sm bg-[#dec5feff] text-[#1f2937] hover:bg-[#b983ff]"
+                style={{ border: "2px solid #dec5feff" }}
                 onClick={() => {
                   setView("customYear");
                   setCustomYearInput("");
