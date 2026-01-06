@@ -90,15 +90,16 @@ function getVolatilityColor(volatility: string): string {
 // Helper function: Format volatility level with visual symbol and text
 function formatVolatility(volatility: string): string {
   switch (volatility) {
-    case 'stabilne': return '◆ Stabilne';
-    case 'zmienne': return '◇ Zmienne';
-    case 'mocno_zmienne': return '◇ Mocno zmienne';
+    case 'niska': return '~ Niska';
+    case 'średnia': return '≈ Średnia';
+    case 'wysoka': return '≋ Wysoka';
     default: return 'Nieznane';
   }
 }
 
 export function Planning({ transactions, categories, token }: PlanningProps) {
   const [activeTab, setActiveTab] = useState<'history' | 'current' | 'future'>('history');
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
   // Fetch all transactions for analysis
   const { data: allTransactions } = useFetch(
     token,
@@ -270,9 +271,9 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
     const std = Math.sqrt(variance);
     const cv = std / mean;
     
-    if (cv < 0.3) return { volatility: 'stabilne', cv };
-    if (cv < 0.7) return { volatility: 'zmienne', cv };
-    return { volatility: 'mocno_zmienne', cv };
+    if (cv < 0.3) return { volatility: 'niska', cv };
+    if (cv < 0.7) return { volatility: 'średnia', cv };
+    return { volatility: 'wysoka', cv };
   };
 
   const filteredTx = sourceTransactions;
@@ -389,7 +390,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
           <CardTitle className="text-2xl">Planowanie budżetu</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center bg-slate-100 rounded-full p-1 text-sm font-medium text-slate-600 gap-1">
+          <div className="inline-flex items-center rounded-full p-1 text-sm font-medium text-slate-600 gap-1" style={{  border: '2px solid #dec5fe' }}>
             {[
               { key: 'history' as const, label: 'Analiza historyczna' },
               { key: 'current' as const, label: 'Aktualny miesiąc' },
@@ -399,8 +400,9 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2 rounded-full transition ${
-                  activeTab === tab.key ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'
+                  activeTab === tab.key ? 'shadow-sm text-slate-900 bg-white' : 'text-slate-700'
                 }`}
+                style={activeTab === tab.key ? { backgroundColor: '#dec5fe', border: '2px solid #dec5fe' } : {}}
               >
                 {tab.label}
               </button>
@@ -413,8 +415,8 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Porównanie wydatków względem średniej z ostatnich 12 miesięcy</CardTitle>
-              <p className="text-4xs text-slate-500 mt-1">Średnia wydatków 12 miesięcy: <span className="font-semibold text-slate-800">{monthlySummaries.avg12.toFixed(2)} zł</span></p>
+              <CardTitle className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Średnie wydatki z ostatnich 12 miesięcy</CardTitle>
+              <p className="text-4xs text-slate-500 mt-1">Suma średniej wydatków z 12 miesięcy: <span className="font-semibold text-purple-700">{monthlySummaries.avg12.toFixed(2)} zł</span></p>
             </CardHeader>
             <CardContent>
 
@@ -424,7 +426,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                     <tr className="border-b border-slate-200">
                       <th className="text-left pb-2">Kategoria</th>
                       <th className="text-left pb-2">Średnia 12 miesięcy</th>
-                      <th className="text-left pb-2">Stabilność</th>
+                      <th className="text-left pb-2">Zmienność wydatków</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -461,39 +463,39 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                monthlySummaries.maxMonth.year === monthlySummaries.minMonth.year ? (
                 // Jeśli max i min to ten sam miesiąc, pokaż tylko jeden box
                 <>
-                <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-sm">
-                  <p className="text-xs text-slate-500 mb-1">Jedyny miesiąc z danymi</p>
+                <div className="rounded-xl bg-white p-4 shadow-sm" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                  <p className="text-xs text-purple-600 mb-1">Jedyny miesiąc z danymi</p>
                   <p className="text-lg font-semibold text-slate-800">{formatMonthLabel(monthlySummaries.maxMonth.month, monthlySummaries.maxMonth.year)}</p>
                   <p className="text-lg font-bold text-slate-800">{monthlySummaries.maxMonth.expense.toFixed(0)} zł</p>
                 </div>
-                <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-sm">
-                  <p className="text-xs text-slate-500 mb-1">Ostatni miesiąc</p>
+                <div className="rounded-xl bg-white p-4 shadow-sm" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                  <p className="text-xs text-purple-600 mb-1">Ostatni miesiąc</p>
                   <p className="text-lg font-semibold text-slate-800">{(() => {
                     const now = new Date();
                     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                     return formatMonthLabel(lastMonth.getMonth(), lastMonth.getFullYear());
                   })()}</p>
-                  <p className="text-lg font-bold text-slate-800">{monthlySummaries.lastMonthTotal.toFixed(0)} zł</p>
+                  <p className="text-lg font-bold text-purple-700">{monthlySummaries.lastMonthTotal.toFixed(0)} zł</p>
                   </div>
                 </>
               ) : (
                 <>
                   {monthlySummaries.maxMonth && (
-                    <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-sm">
-                      <p className="text-xs text-slate-500 mb-1">Najdroższy miesiąc</p>
+                    <div className="rounded-xl bg-white p-4 shadow-sm" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                      <p className="text-xs text-purple-600 mb-1">Najdroższy miesiąc</p>
                       <p className="text-lg font-semibold text-slate-800">{formatMonthLabel(monthlySummaries.maxMonth.month, monthlySummaries.maxMonth.year)}</p>
                       <p className="text-lg font-bold text-red-500">{monthlySummaries.maxMonth.expense.toFixed(0)} zł</p>
                     </div>
                   )}
                   {monthlySummaries.minMonth && (
-                    <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-sm">
-                      <p className="text-xs text-slate-500 mb-1">Najtańszy miesiąc</p>
+                    <div className="rounded-xl bg-white p-4 shadow-sm" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                      <p className="text-xs text-purple-600 mb-1">Najtańszy miesiąc</p>
                       <p className="text-lg font-semibold text-slate-800">{formatMonthLabel(monthlySummaries.minMonth.month, monthlySummaries.minMonth.year)}</p>
                       <p className="text-lg font-bold text-green-600">{monthlySummaries.minMonth.expense.toFixed(0)} zł</p>
                       </div>
                   )}
-                  <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-sm">
-                    <p className="text-xs text-slate-500 mb-1">Ostatni miesiąc</p>
+                  <div className="rounded-xl bg-white p-4 shadow-sm" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                    <p className="text-xs text-purple-600 mb-1">Ostatni miesiąc</p>
                     <p className="text-lg font-semibold text-slate-800">{(() => {
                       const now = new Date();
                       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -509,50 +511,106 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Ostatnie 6 miesięcy</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Ostatnie 6 miesięcy</CardTitle>
+                <button
+                  onClick={() => {
+                    if (expandedMonths.size === monthlySummaries.months.length) {
+                      setExpandedMonths(new Set());
+                    } else {
+                      setExpandedMonths(new Set(monthlySummaries.months.map(m => `${m.year}-${m.month}`)));
+                    }
+                  }}
+                  className="text-sm px-3 py-1 rounded-lg transition"
+                  style={{ backgroundColor: '#dec5fe' }}
+                >
+                  {expandedMonths.size === monthlySummaries.months.length ? 'Zwiń wszystko' : 'Rozwiń wszystko'}
+                </button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {monthlySummaries.months.map((m) => (
-                <div key={`${m.year}-${m.month}`} className="border border-slate-200 rounded-xl p-3 shadow-sm bg-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-500">{m.fullLabel}</p>
-                      <p className="text-lg font-semibold text-slate-800">{m.expense.toFixed(0)} zł</p>
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {m.direction === 'up' ? (
-                        <span className="text-red-600">↑</span>
-                      ) : m.direction === 'down' ? (
-                        <span className="text-green-600">↓</span>
-                      ) : (
-                        <span className="text-slate-500">→</span>
-                      )}
-                    </div>
+              <div className="mb-4 pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-6 text-sm flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-red-500">↑</span>
+                    <p className="text-slate-600">Większe niż +5% względem średniej</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-green-600">↓</span>
+                    <p className="text-slate-600">Mniejsze niż -5% względem średniej</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-slate-500">→</span>
+                    <p className="text-slate-600">Mieszczą się w ±5% od średniej</p>
                   </div>
                 </div>
-              ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-            <p className="text-s font-semibold text-slate-700 mb-3">Trend (porównanie do średniej 12 miesięcy):</p>
-            <div className="flex items-center gap-6 text-sm flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-red-500">↑</span>
-                <p className="text-slate-600">Rosnące — większe niż +5% względem średniej</p>
+              
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {monthlySummaries.months.map((m) => {
+                const monthKey = `${m.year}-${m.month}`;
+                const isExpanded = expandedMonths.has(monthKey);
+                
+                return (
+                  <div key={monthKey}>
+                    <div 
+                      className="border border-slate-200 rounded-xl p-3 shadow-sm bg-white cursor-pointer hover:bg-slate-50 transition" 
+                      style={{ borderLeftWidth: '5px', borderLeftColor: '#dec5fe' }}
+                      onClick={() => {
+                        const newExpanded = new Set(expandedMonths);
+                        if (isExpanded) {
+                          newExpanded.delete(monthKey);
+                        } else {
+                          newExpanded.add(monthKey);
+                        }
+                        setExpandedMonths(newExpanded);
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-500">{m.fullLabel}</p>
+                          <p className="text-lg font-semibold text-slate-800">{m.expense.toFixed(0)} zł</p>
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {m.direction === 'up' ? (
+                            <span className="text-red-600">↑</span>
+                          ) : m.direction === 'down' ? (
+                            <span className="text-green-600">↓</span>
+                          ) : (
+                            <span className="text-slate-500">→</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {isExpanded && m.categoryTotals && m.categoryTotals.length > 0 && (
+                      <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p className="text-xs font-semibold text-slate-600 mb-2">Kategorie:</p>
+                        <div className="space-y-1">
+                          {m.categoryTotals.map((cat) => (
+                            <div key={cat.id} className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="text-slate-700">{cat.name}</span>
+                                <span className="font-semibold text-slate-800">{cat.amount.toFixed(0)} zł</span>
+                              </div>
+                              <span className="text-lg font-bold">
+                                {cat.direction === 'up' ? (
+                                  <span className="text-red-600">↑</span>
+                                ) : cat.direction === 'down' ? (
+                                  <span className="text-green-600">↓</span>
+                                ) : (
+                                  <span className="text-slate-500">→</span>
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-green-600">↓</span>
-                <p className="text-slate-600">Malejące — mniejsze niż -5% względem średniej</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-slate-500">→</span>
-                <p className="text-slate-600">Stabilne — mieszczą się w ±5% od średniej</p>
-              </div>
-            </div>
             </CardContent>
           </Card>
         </div>
@@ -573,16 +631,16 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
               {!loadingCurrentMonth && currentMonthPredictions && (
                 <div className="space-y-4">
                   <div className="grid md:grid-cols-3 gap-3">
-                  <div className="rounded-2xl p-4 bg-gradient-to-r from-emerald-100 to-emerald-200 border border-emerald-200">
-                    <p className="text-xs text-emerald-700">Prognoza łączna</p>
-                    <p className="text-2xl font-bold text-emerald-900">{currentMonthPredictions.total_estimated.toFixed(2)} zł</p>
+                  <div className="rounded-2xl p-4 bg-gradient-to-r from-purple-100 to-purple-200" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                    <p className="text-xs text-purple-700">Prognoza łączna</p>
+                    <p className="text-2xl font-bold text-purple-900">{currentMonthPredictions.total_estimated.toFixed(2)} zł</p>
                   </div>
-                  <div className="rounded-2xl p-4 bg-white border border-slate-200">
-                    <p className="text-xs text-slate-500">Wydano dotąd</p>
+                  <div className="rounded-2xl p-4 bg-white" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                    <p className="text-xs text-purple-600">Wydano dotąd</p>
                     <p className="text-2xl font-bold text-slate-800">{(currentMonthPredictions.total_actual ?? 0).toFixed(2)} zł</p>
                   </div>
-                  <div className="rounded-2xl p-4 bg-white border border-slate-200">
-                    <p className="text-xs text-slate-500">Różnica</p>
+                  <div className="rounded-2xl p-4 bg-white" style={{ borderWidth: '3px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
+                    <p className="text-xs text-purple-600">Różnica</p>
                     {(() => {
                       const diff = currentMonthPredictions.total_estimated - (currentMonthPredictions.total_actual ?? 0);
                       const color = diff >= 0 ? 'text-emerald-600' : 'text-red-500';
@@ -593,9 +651,9 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
                 <div className="grid lg:grid-cols-3 gap-4">
                   <div className="lg:col-span-2">
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  <div className="overflow-x-auto rounded-2xl bg-white shadow-sm" style={{ borderLeftWidth: '4px', borderRightWidth: '4px', borderColor: '#dec5fe', borderStyle: 'solid' }}>
                       <table className="w-full text-sm text-slate-700">
-                        <thead className="text-xs uppercase text-slate-500">
+                        <thead className="text-xs uppercase text-purple-600">
                           <tr className="border-b border-slate-200">
                             <th className="text-left py-3 px-4">Kategoria</th>
                             <th className="text-right py-3 px-4">Prognoza</th>
@@ -660,7 +718,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
 
               {predictions && (
                 <div className="grid md:grid-cols-3 gap-3 mb-4">
-                  <div className="rounded-2xl p-4  border border-purple-200" style={{ borderColor: '#dec5fe' }}>
+                  <div className="rounded-2xl p-4  border border-slate-500">
                   <p className="text-xs text-purple-700">Suma przewidywanych wydatków</p>
                   <p className="text-2xl font-bold text-purple-900">{predictions.total_estimated.toFixed(2)} zł</p>
                 </div>
@@ -672,12 +730,11 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
               )}
 
               {!loadingPredictions && predictions && (
-                <div className="space-y-2">
+                <div className="grid md:grid-cols-2 gap-3">
                 {[...predictions.predictions]
                   .slice()
                   .sort((a, b) => b.estimated_amount - a.estimated_amount)
                   .map((pred) => {
-                    const share = predictions.total_estimated > 0 ? (pred.estimated_amount / predictions.total_estimated) * 100 : 0;
                     const trendLabel = pred.trend_direction === 'up' ? 'Rosnące' : pred.trend_direction === 'down' ? 'Malejące' : 'Stabilne';
                     const trendClass = pred.trend_direction === 'up' ? 'text-red-600' : pred.trend_direction === 'down' ? 'text-emerald-600' : 'text-slate-600';
                     return (
@@ -686,31 +743,19 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                           className={`flex items-center justify-between p-4 rounded-xl border ${
                             !pred.has_data ? 'opacity-60 bg-slate-50 border-dashed border-slate-200' : 'bg-white border-slate-200'
                           }`}
+                          style={{ borderLeftWidth: '4px', borderLeftColor: '#dec5fe' }}
                         >
                         <div className="flex-1">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 mb-1">
                             <p className="font-semibold text-slate-800">{pred.category}</p>
                             {pred.trend_direction && pred.trend_direction !== 'none' && pred.trend_direction !== 'insufficient_data' && (
                               <span className={`text-xs font-semibold ${trendClass}`}>{trendLabel}</span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {pred.has_data ? (
-                              <>
-                                {pred.confidence === 'high' ? '🟢 Wysoka pewność' : pred.confidence === 'medium' ? '🟡 Średnia pewność' : '🔴 Niska pewność'}
-                                {pred.monthly_average && pred.monthly_average > 0 && <span className="ml-2">• Śr. {pred.monthly_average.toFixed(0)} zł/mies.</span>}
-                              </>
-                            ) : (
-                              'Za mało transakcji w historii'
-                            )}
-                          </p>
-                          <div className="mt-2 w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-purple-500 rounded-full" style={{ width: `${share}%` }} />
-                          </div>
                         </div>
                         <div className="text-right ml-4">
                           {pred.has_data ? (
-                            <p className="text-lg font-bold text-purple-800">{pred.estimated_amount.toFixed(2)} zł</p>
+                            <p className="text-xl font-bold text-slate-800">{pred.estimated_amount.toFixed(2)} zł</p>
                           ) : (
                             <p className="text-sm font-medium text-slate-400">--- zł</p>
                           )}

@@ -46,6 +46,35 @@ export function CategoryBreakdown({ transactions, categories }: CategoryBreakdow
     }))
     .sort((a, b) => b.percent - a.percent);
 
+  // Custom label with line breaks for long category names
+  const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent, index }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 25;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    
+    const words = name.split(' ');
+    const percentText = `${(percent * 100).toFixed(0)}%`;
+    const color = COLORS[index % COLORS.length];
+    
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill={color} 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="16"
+      >
+        {words.map((word: string, i: number) => (
+          <tspan key={i} x={x} dy={i === 0 ? 0 : 14}>
+            {i === words.length - 1 ? `${word} ${percentText}` : word}
+          </tspan>
+        ))}
+      </text>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -64,7 +93,7 @@ export function CategoryBreakdown({ transactions, categories }: CategoryBreakdow
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={renderCustomLabel}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
