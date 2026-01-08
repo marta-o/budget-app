@@ -440,7 +440,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
                           <td className="py-2 text-left">{avgCat.toFixed(2)} zł</td>
                           <td className={`py-2 text-right-7 text-xs font-semibold ${getVolatilityColor(volatilityInfo.volatility)}`}>
                             {volatilityInfo.volatility === 'mało_danych' || volatilityInfo.volatility === 'brak_wydatków'
-                              ? '◆ Mało danych'
+                              ? 'Brak danych'
                               : formatVolatility(volatilityInfo.volatility)}
                           </td>
                         </tr>
@@ -772,7 +772,7 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
             </CardContent>
           </Card>
 
-          {modelMetrics && (
+          {/* {modelMetrics && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Analiza modelu ML</CardTitle>
@@ -830,9 +830,9 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
               </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
 
-          {featureImportance && featureImportance.length > 0 && (
+          {/* {featureImportance && featureImportance.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Ważność cech w modelu ML</CardTitle>
@@ -869,19 +869,19 @@ export function Planning({ transactions, categories, token }: PlanningProps) {
               </div>
             </CardContent>
             </Card>
-          )}
+          )} */}
 
           {loadingFeatures && (
             <div className="text-center py-6 text-slate-500">Ładowanie informacji o modelu...</div>
           )}
 
-          {!loadingFeatures && !featureImportance && (
+          {/* {!loadingFeatures && !featureImportance && (
             <Card>
               <CardContent className="text-center">
                 Model ML będzie dostępny po zebraniu większej liczby transakcji (minimum 30)
               </CardContent>
             </Card>
-          )}
+          )} */}
         </div>
       )}
     </div>

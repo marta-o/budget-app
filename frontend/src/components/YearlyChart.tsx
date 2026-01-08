@@ -34,8 +34,8 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
 
     const chartData = monthNames.map((name, index) => ({
       month: name,
-      income: monthlyData[index]?.income || 0,
-      expenses: monthlyData[index]?.expenses || 0,
+      income: Math.round((monthlyData[index]?.income || 0) * 100) / 100,
+      expenses: Math.round((monthlyData[index]?.expenses || 0) * 100) / 100,
     }));
 
     return (
@@ -78,8 +78,8 @@ export function YearlyChart({ transactions, categories, year }: YearlyChartProps
 
   const chartData = monthNames.map((name, index) => ({
     month: name,
-    income: +((monthlyTotals[index]?.income || 0) / yearsCount).toFixed(2),
-    expenses: +((monthlyTotals[index]?.expenses || 0) / yearsCount).toFixed(2),
+    income: Math.round((monthlyTotals[index]?.income || 0) / yearsCount * 100) / 100,
+    expenses: Math.round((monthlyTotals[index]?.expenses || 0) / yearsCount * 100) / 100,
   }));
 
   return (
